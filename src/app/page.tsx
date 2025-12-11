@@ -1,65 +1,1040 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import { FingerprintCollector } from "@/lib/fingerprint";
+import { FingerprintData, IPData } from "@/lib/types";
+import { getCategoryTitle, getCategoryIcon } from "@/lib/categoryConfig";
+import { CATEGORY_DESCRIPTIONS } from "@/lib/constants";
+import { FIELD_DESCRIPTIONS } from "@/lib/field-descriptions";
+import {
+  calculateEntropy,
+  calculateUniqueness,
+  countProperties,
+  analyzeDataQuality,
+  formatLabel,
+  formatValue,
+  checkSuspicious,
+  checkMissing,
+} from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import IPInfoCard from "@/components/ip/IPInfoCard";
+import BrowserSummaryCard from "@/components/summary/BrowserSummaryCard";
+
+interface DataItemDetail {
+  key: string;
+  value: unknown;
+  category: string;
+  isSuspicious: boolean;
+  isMissing: boolean;
+}
 
 export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+  const [fingerprint, setFingerprint] = useState<FingerprintData | null>(null);
+  const [ipData, setIpData] = useState<IPData | null>(null);
+  const [ipLoading, setIpLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [hash, setHash] = useState<string>("");
+  const [activeCategory, setActiveCategory] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedItem, setSelectedItem] = useState<DataItemDetail | null>(null);
+
+  useEffect(() => {
+    const collectFingerprint = async () => {
+      const collector = new FingerprintCollector();
+      const data = await collector.collect();
+      setFingerprint(data);
+
+      if (data) {
+        setActiveCategory(Object.keys(data)[0]);
+      }
+
+      const hashStr = JSON.stringify(data);
+      const hashBuffer = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(hashStr)
+      );
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+      setHash(hashHex);
+      setLoading(false);
+    };
+
+    const fetchIPData = async () => {
+      try {
+        const response = await fetch("/api/ip/analyze");
+        const result = await response.json();
+        if (result.success) setIpData(result.data);
+      } catch (error) {
+        console.error("Failed to fetch IP data:", error);
+      }
+      setIpLoading(false);
+    };
+
+    collectFingerprint();
+    fetchIPData();
+  }, []);
+
+  const overallQuality = useMemo(() => {
+    if (!fingerprint) return { suspicious: 0, missing: 0, total: 0, score: 0 };
+
+    let totalSuspicious = 0;
+    let totalMissing = 0;
+    let totalItems = 0;
+
+    Object.values(fingerprint).forEach((categoryData) => {
+      const quality = analyzeDataQuality(
+        categoryData as Record<string, unknown>
+      );
+      totalSuspicious += quality.suspicious;
+      totalMissing += quality.missing;
+      totalItems += quality.total;
+    });
+
+    const issues = totalSuspicious + totalMissing;
+    const score =
+      totalItems > 0
+        ? Math.round(((totalItems - issues) / totalItems) * 100)
+        : 0;
+
+    return {
+      suspicious: totalSuspicious,
+      missing: totalMissing,
+      total: totalItems,
+      score,
+    };
+  }, [fingerprint]);
+
+  const filteredData = useMemo(() => {
+    if (!fingerprint || !searchQuery.trim()) return null;
+
+    const query = searchQuery.toLowerCase();
+    const results: DataItemDetail[] = [];
+
+    Object.entries(fingerprint).forEach(([category, data]) => {
+      Object.entries(data).forEach(([key, value]) => {
+        const keyMatch = key.toLowerCase().includes(query);
+        const valueMatch = String(value).toLowerCase().includes(query);
+        if (keyMatch || valueMatch) {
+          results.push({
+            category,
+            key,
+            value,
+            isSuspicious: checkSuspicious(key, value),
+            isMissing: checkMissing(value),
+          });
+        }
+      });
+    });
+
+    return results;
+  }, [fingerprint, searchQuery]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center animate-fade-in">
+          <div className="relative w-24 h-24 mx-auto mb-8">
+            {/* Outer ring */}
+            <div className="absolute inset-0 rounded-full border-2 border-primary/20"></div>
+            {/* Spinning ring */}
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin"></div>
+            {/* Inner spinning ring */}
+            <div
+              className="absolute inset-4 rounded-full border-2 border-transparent border-t-neon animate-spin"
+              style={{
+                animationDirection: "reverse",
+                animationDuration: "0.8s",
+              }}
+            ></div>
+            {/* Center glow */}
+            <div className="absolute inset-8 rounded-full bg-primary/20 animate-pulse"></div>
+          </div>
+          <h2 className="text-2xl font-bold text-gradient mb-3">분석 중...</h2>
+          <p className="text-muted-foreground">
+            브라우저 지문을 수집하고 있습니다
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+    );
+  }
+
+  const categories = fingerprint ? Object.keys(fingerprint) : [];
+
+  return (
+    <TooltipProvider delayDuration={300}>
+      <div className="min-h-screen flex flex-col">
+        {/* Header with gradient border */}
+        <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/90 border-b border-border">
+          <div className="h-[2px] bg-linear-to-r from-transparent via-primary to-transparent"></div>
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="relative">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-linear-to-br from-primary/20 to-neon/20 border border-primary/30 flex items-center justify-center glow-sm">
+                    <svg
+                      className="w-5 h-5 sm:w-6 sm:h-6 text-primary"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"
+                      />
+                    </svg>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-safe border-2 border-background flex items-center justify-center">
+                    <svg
+                      className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-background"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-lg sm:text-xl font-bold text-gradient">
+                    Fingerprint Detector
+                  </h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    브라우저 지문 분석 도구
+                  </p>
+                </div>
+              </div>
+
+              {/* Search Bar */}
+              <div className="w-full sm:flex-1 sm:max-w-md">
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-linear-to-r from-primary/20 to-neon/20 rounded-xl blur-sm opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
+                  <div className="relative flex items-center">
+                    <svg
+                      className="absolute left-3 sm:left-4 w-4 h-4 text-muted-foreground"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="지문 데이터 검색..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 sm:pl-11 pr-4 py-2 sm:py-2.5 text-sm bg-secondary/50 border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:bg-secondary transition-all"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-3 p-1 rounded-md hover:bg-muted"
+                      >
+                        <svg
+                          className="w-4 h-4 text-muted-foreground"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Hash Banner */}
+        <div className="bg-linear-to-r from-primary/5 via-card to-neon/5 border-b border-border">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
+                  <svg
+                    className="w-4 h-4 text-primary"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                  <span className="text-xs font-medium text-primary">
+                    SHA-256
+                  </span>
+                </div>
+                <code className="text-sm font-mono text-foreground/80 bg-muted/50 px-3 py-1.5 rounded-lg">
+                  {hash.slice(0, 20)}...{hash.slice(-12)}
+                </code>
+              </div>
+              <div className="flex items-center gap-3">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigator.clipboard.writeText(hash)}
+                      className="gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                      복사
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>전체 해시 복사</TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+
+        {/* Search Results Overlay */}
+        {searchQuery.trim() && filteredData && (
+          <div className="max-w-7xl mx-auto px-4 py-6 w-full">
+            <Card className="border-primary/20 glow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-primary"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">검색 결과</h3>
+                      <p className="text-xs text-muted-foreground">
+                        &quot;{searchQuery}&quot; 검색 결과
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="text-sm">
+                    {filteredData.length}개 발견
+                  </Badge>
+                </div>
+
+                {filteredData.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <svg
+                      className="w-12 h-12 mx-auto mb-3 opacity-50"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <p>검색 결과가 없습니다</p>
+                  </div>
+                ) : (
+                  <ScrollArea className="h-64">
+                    <div className="space-y-2">
+                      {filteredData.map((item, i) => (
+                        <div
+                          key={i}
+                          onClick={() => {
+                            setActiveCategory(item.category);
+                            setSearchQuery("");
+                          }}
+                          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all hover:scale-[1.01] ${
+                            item.isSuspicious
+                              ? "bg-danger/10 border border-danger/20 hover:bg-danger/15"
+                              : item.isMissing
+                              ? "bg-warning/10 border border-warning/20 hover:bg-warning/15"
+                              : "bg-secondary/50 hover:bg-secondary"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] shrink-0"
+                            >
+                              {getCategoryTitle(item.category)}
+                            </Badge>
+                            <span className="text-sm font-medium">
+                              {formatLabel(item.key)}
+                            </span>
+                            {item.isSuspicious && (
+                              <Badge
+                                variant="destructive"
+                                className="text-[9px]"
+                              >
+                                경고
+                              </Badge>
+                            )}
+                            {item.isMissing && !item.isSuspicious && (
+                              <Badge
+                                variant="outline"
+                                className="text-[9px] border-warning/30 text-warning"
+                              >
+                                누락
+                              </Badge>
+                            )}
+                          </div>
+                          <code className="text-xs text-primary font-mono truncate max-w-[200px]">
+                            {formatValue(item.value)}
+                          </code>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Main Content */}
+        {!searchQuery.trim() && (
+          <>
+            {/* Summary Section */}
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 w-full">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <IPInfoCard ipData={ipData} loading={ipLoading} />
+                <BrowserSummaryCard fingerprint={fingerprint} />
+              </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 pb-4 sm:pb-6 w-full">
+              <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+                {/* Quality Score - Special Card */}
+                <Card
+                  className={`col-span-3 sm:col-span-1 relative overflow-hidden ${
+                    overallQuality.score >= 90
+                      ? "border-safe/30"
+                      : overallQuality.score >= 70
+                      ? "border-warning/30"
+                      : "border-danger/30"
+                  }`}
+                >
+                  <div
+                    className={`absolute inset-0 opacity-10 ${
+                      overallQuality.score >= 90
+                        ? "bg-linear-to-br from-safe to-transparent"
+                        : overallQuality.score >= 70
+                        ? "bg-linear-to-br from-warning to-transparent"
+                        : "bg-linear-to-br from-danger to-transparent"
+                    }`}
+                  ></div>
+                  <CardContent className="p-3 sm:p-4 text-center relative">
+                    <div className="text-2xl sm:text-3xl font-bold text-gradient">
+                      {overallQuality.score}%
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                      완벽도
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Issue Cards */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card
+                      className={`cursor-help ${
+                        overallQuality.suspicious > 0
+                          ? "border-danger/30 bg-danger/5"
+                          : ""
+                      }`}
+                    >
+                      <CardContent className="p-3 sm:p-4 text-center">
+                        <div
+                          className={`text-xl sm:text-2xl font-bold ${
+                            overallQuality.suspicious > 0
+                              ? "text-danger"
+                              : "text-safe"
+                          }`}
+                        >
+                          {overallQuality.suspicious}
+                        </div>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                          경고
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    의심스러운 값이 감지된 항목 수
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card
+                      className={`cursor-help ${
+                        overallQuality.missing > 0
+                          ? "border-warning/30 bg-warning/5"
+                          : ""
+                      }`}
+                    >
+                      <CardContent className="p-3 sm:p-4 text-center">
+                        <div
+                          className={`text-xl sm:text-2xl font-bold ${
+                            overallQuality.missing > 0
+                              ? "text-warning"
+                              : "text-safe"
+                          }`}
+                        >
+                          {overallQuality.missing}
+                        </div>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                          누락
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent>값이 누락된 항목 수</TooltipContent>
+                </Tooltip>
+
+                <Card>
+                  <CardContent className="p-3 sm:p-4 text-center">
+                    <div className="text-xl sm:text-2xl font-bold text-primary">
+                      {fingerprint ? countProperties(fingerprint) : 0}
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                      수집 항목
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-3 sm:p-4 text-center">
+                    <div className="text-xl sm:text-2xl font-bold text-primary">
+                      {fingerprint ? calculateEntropy(fingerprint) : 0}
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                      엔트로피
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-3 sm:p-4 text-center">
+                    <div className="text-xl sm:text-2xl font-bold text-primary">
+                      {fingerprint ? calculateUniqueness(fingerprint) : "0%"}
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                      고유성
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Fingerprint Data Tabs */}
+            <main className="max-w-7xl mx-auto px-3 sm:px-4 pb-6 sm:pb-8 w-full flex-1">
+              {fingerprint && (
+                <Card className="overflow-hidden">
+                  <Tabs
+                    value={activeCategory}
+                    onValueChange={setActiveCategory}
+                  >
+                    {/* Category Description Header */}
+                    <div className="p-3 sm:p-4 bg-linear-to-r from-primary/5 to-transparent border-b border-border">
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                          {getCategoryIcon(activeCategory)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h2 className="font-bold text-base sm:text-lg">
+                            {getCategoryTitle(activeCategory)}
+                          </h2>
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2">
+                            {CATEGORY_DESCRIPTIONS[activeCategory] ||
+                              "이 카테고리에 대한 설명이 없습니다."}
+                          </p>
+                        </div>
+                        {(() => {
+                          const quality = analyzeDataQuality(
+                            fingerprint[activeCategory] as Record<
+                              string,
+                              unknown
+                            >
+                          );
+                          return (
+                            <div className="hidden sm:flex items-center gap-2 shrink-0">
+                              {quality.suspicious > 0 && (
+                                <Badge variant="destructive" className="gap-1">
+                                  <svg
+                                    className="w-3 h-3"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  {quality.suspicious} 경고
+                                </Badge>
+                              )}
+                              {quality.missing > 0 && (
+                                <Badge
+                                  variant="outline"
+                                  className="gap-1 border-warning/30 text-warning"
+                                >
+                                  <svg
+                                    className="w-3 h-3"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  {quality.missing} 누락
+                                </Badge>
+                              )}
+                              <Badge variant="secondary">
+                                {
+                                  Object.keys(fingerprint[activeCategory])
+                                    .length
+                                }
+                                개 항목
+                              </Badge>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* Tab Navigation */}
+                    <div className="border-b border-border bg-muted/30 overflow-hidden">
+                      <ScrollArea className="w-full">
+                        <TabsList className="h-auto p-1.5 sm:p-2 bg-transparent w-max min-w-full justify-start gap-1">
+                          {categories.map((category) => {
+                            const quality = analyzeDataQuality(
+                              fingerprint[category] as Record<string, unknown>
+                            );
+                            const hasIssues =
+                              quality.suspicious > 0 || quality.missing > 0;
+
+                            return (
+                              <TabsTrigger
+                                key={category}
+                                value={category}
+                                className={`relative flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm whitespace-nowrap rounded-lg transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm ${
+                                  hasIssues ? "pr-5 sm:pr-6" : ""
+                                }`}
+                              >
+                                <span className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center opacity-70">
+                                  {getCategoryIcon(category)}
+                                </span>
+                                <span className="hidden xs:inline">
+                                  {getCategoryTitle(category)}
+                                </span>
+                                <span className="xs:hidden">
+                                  {getCategoryTitle(category).slice(0, 4)}
+                                </span>
+                                {hasIssues && (
+                                  <span
+                                    className={`absolute top-1 right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
+                                      quality.suspicious > 0
+                                        ? "bg-danger"
+                                        : "bg-warning"
+                                    }`}
+                                  ></span>
+                                )}
+                              </TabsTrigger>
+                            );
+                          })}
+                        </TabsList>
+                        <ScrollBar orientation="horizontal" className="h-2" />
+                      </ScrollArea>
+                    </div>
+
+                    {/* Tab Content */}
+                    {categories.map((category) => (
+                      <TabsContent
+                        key={category}
+                        value={category}
+                        className="p-0 m-0"
+                      >
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                            {Object.entries(fingerprint[category]).map(
+                              ([key, value]) => {
+                                const isSuspicious = checkSuspicious(
+                                  key,
+                                  value
+                                );
+                                const isMissing = checkMissing(value);
+                                const displayValue = formatValue(value);
+                                const description = FIELD_DESCRIPTIONS[key];
+
+                                return (
+                                  <div
+                                    key={key}
+                                    onClick={() =>
+                                      setSelectedItem({
+                                        key,
+                                        value,
+                                        category,
+                                        isSuspicious,
+                                        isMissing,
+                                      })
+                                    }
+                                    className={`group relative rounded-xl p-4 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg ${
+                                      isSuspicious
+                                        ? "bg-linear-to-br from-danger/10 to-danger/5 border border-danger/30 hover:border-danger/50"
+                                        : isMissing
+                                        ? "bg-linear-to-br from-warning/10 to-warning/5 border border-warning/30 hover:border-warning/50"
+                                        : "bg-linear-to-br from-secondary/80 to-secondary/40 border border-border hover:border-primary/30"
+                                    }`}
+                                  >
+                                    {/* Status indicator */}
+                                    {(isSuspicious || isMissing) && (
+                                      <div
+                                        className={`absolute top-3 right-3 w-2 h-2 rounded-full ${
+                                          isSuspicious
+                                            ? "bg-danger animate-pulse"
+                                            : "bg-warning"
+                                        }`}
+                                      ></div>
+                                    )}
+
+                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                          {formatLabel(key)}
+                                        </span>
+                                        {description && (
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <button className="opacity-50 hover:opacity-100 transition-opacity">
+                                                <svg
+                                                  className="w-3.5 h-3.5 text-muted-foreground"
+                                                  fill="none"
+                                                  stroke="currentColor"
+                                                  viewBox="0 0 24 24"
+                                                >
+                                                  <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                  />
+                                                </svg>
+                                              </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent
+                                              side="top"
+                                              className="max-w-xs"
+                                            >
+                                              <p className="text-xs">
+                                                {description}
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        )}
+                                      </div>
+                                      {isSuspicious && (
+                                        <Badge
+                                          variant="destructive"
+                                          className="text-[9px] h-4 px-1.5"
+                                        >
+                                          경고
+                                        </Badge>
+                                      )}
+                                      {isMissing && !isSuspicious && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[9px] h-4 px-1.5 border-warning/50 text-warning"
+                                        >
+                                          누락
+                                        </Badge>
+                                      )}
+                                    </div>
+
+                                    <p
+                                      className={`text-sm font-mono break-all ${
+                                        displayValue.length > 60
+                                          ? "text-xs"
+                                          : ""
+                                      } ${
+                                        isSuspicious
+                                          ? "text-danger"
+                                          : isMissing
+                                          ? "text-warning"
+                                          : "text-foreground"
+                                      }`}
+                                    >
+                                      {displayValue.length > 100
+                                        ? displayValue.slice(0, 100) + "..."
+                                        : displayValue}
+                                    </p>
+
+                                    {/* Click hint */}
+                                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <svg
+                                        className="w-4 h-4 text-muted-foreground"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                        />
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                        />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            )}
+                          </div>
+                        </CardContent>
+                      </TabsContent>
+                    ))}
+                  </Tabs>
+                </Card>
+              )}
+            </main>
+          </>
+        )}
+
+        {/* Detail Dialog */}
+        <Dialog
+          open={!!selectedItem}
+          onOpenChange={() => setSelectedItem(null)}
+        >
+          <DialogContent className="max-w-lg">
+            {selectedItem && (
+              <>
+                <DialogHeader>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        selectedItem.isSuspicious
+                          ? "bg-danger/20 text-danger"
+                          : selectedItem.isMissing
+                          ? "bg-warning/20 text-warning"
+                          : "bg-primary/20 text-primary"
+                      }`}
+                    >
+                      {selectedItem.isSuspicious ? (
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      ) : selectedItem.isMissing ? (
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <DialogTitle className="text-lg">
+                        {formatLabel(selectedItem.key)}
+                      </DialogTitle>
+                      <DialogDescription className="text-xs">
+                        {getCategoryTitle(selectedItem.category)} •{" "}
+                        {selectedItem.isSuspicious
+                          ? "경고 발생"
+                          : selectedItem.isMissing
+                          ? "값 누락"
+                          : "정상"}
+                      </DialogDescription>
+                    </div>
+                  </div>
+                </DialogHeader>
+
+                <div className="space-y-4 mt-4">
+                  {/* Value */}
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
+                      값
+                    </h4>
+                    <div className="bg-muted/50 rounded-lg p-3 font-mono text-sm break-all max-h-40 overflow-y-auto">
+                      {formatValue(selectedItem.value)}
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  {FIELD_DESCRIPTIONS[selectedItem.key] && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
+                        설명
+                      </h4>
+                      <p className="text-sm text-muted-foreground bg-secondary/50 rounded-lg p-3">
+                        {FIELD_DESCRIPTIONS[selectedItem.key]}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Warning Message */}
+                  {selectedItem.isSuspicious && (
+                    <div className="bg-danger/10 border border-danger/20 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <svg
+                          className="w-5 h-5 text-danger shrink-0 mt-0.5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium text-danger">
+                            경고
+                          </p>
+                          <p className="text-xs text-danger/80 mt-1">
+                            이 값은 자동화 도구나 봇의 특성을 나타낼 수
+                            있습니다. 웹사이트에서 접근이 차단될 수 있습니다.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedItem.isMissing && !selectedItem.isSuspicious && (
+                    <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <svg
+                          className="w-5 h-5 text-warning shrink-0 mt-0.5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium text-warning">
+                            값 누락
+                          </p>
+                          <p className="text-xs text-warning/80 mt-1">
+                            이 값이 누락되어 있습니다. 브라우저 설정이나
+                            개인정보 보호 기능으로 인해 수집되지 않았을 수
+                            있습니다.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Footer */}
+        <footer className="border-t border-border bg-card/50 mt-auto">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-[10px] sm:text-xs text-muted-foreground text-center sm:text-left">
+              <p>이 도구는 교육 및 연구 목적으로 제작되었습니다.</p>
+              <p>모든 분석은 브라우저 내에서 수행됩니다.</p>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </TooltipProvider>
   );
 }
