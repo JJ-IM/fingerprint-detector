@@ -456,7 +456,7 @@ export default function Home() {
                             setActiveCategory(item.category);
                             setSearchQuery("");
                           }}
-                          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all hover:scale-[1.01] ${
+                          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors active:opacity-80 ${
                             item.isSuspicious
                               ? "bg-danger/10 border border-danger/20 hover:bg-danger/15"
                               : item.isMissing
@@ -946,7 +946,7 @@ export default function Home() {
                                         isMissing,
                                       })
                                     }
-                                    className={`group relative rounded-xl p-4 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg ${
+                                    className={`group relative rounded-xl p-4 cursor-pointer transition-colors active:opacity-80 md:hover:shadow-lg ${
                                       isSuspicious
                                         ? "bg-linear-to-br from-danger/10 to-danger/5 border border-danger/30 hover:border-danger/50"
                                         : isMissing

@@ -332,3 +332,33 @@ body {
   background: oklch(0.72 0.14 185 / 0.3);
   color: oklch(0.95 0.01 185);
 }
+
+/* ============================================
+   모바일 터치 최적화
+   ============================================ */
+
+/* 터치 디바이스에서 hover 효과 비활성화 */
+@media (hover: none) and (pointer: coarse) {
+  /* 터치 디바이스에서 scale 효과 완전 비활성화 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* 터치 시 즉각적인 피드백 */
+  button, [role="button"], .cursor-pointer {
+    touch-action: manipulation;
+  }
+}
+
+/* 모바일에서 overflow 방지 */
+@media (max-width: 639px) {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  
+  /* 카드 내부 텍스트 줄바꿈 */
+  .break-all {
+    word-break: break-word;
+  }
+}
