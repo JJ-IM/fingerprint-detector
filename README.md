@@ -1,217 +1,125 @@
-# 🔍 Fingerprint Detector
+# 🔐 Fingerprint Detector
 
-브라우저 지문(Browser Fingerprint)을 수집하고 분석하는 웹 애플리케이션입니다.
-
-![Next.js](https://img.shields.io/badge/Next.js-16.0.8-black?style=flat-square&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.x-38B2AC?style=flat-square&logo=tailwind-css)
-![ProxyCheck](https://img.shields.io/badge/ProxyCheck.io-v3-orange?style=flat-square)
+브라우저 및 IP 핑거프린트를 수집하고 분석하는 웹 애플리케이션입니다.
 
 ## ✨ 주요 기능
 
-### 🖥️ 브라우저 지문 수집
+### 🖥️ 브라우저 핑거프린트
+- **Canvas/WebGL 핑거프린트** - 그래픽 렌더링 기반 고유 식별
+- **Audio 핑거프린트** - 오디오 처리 특성 분석
+- **하드웨어 정보** - CPU 코어, 메모리, GPU 정보 수집
+- **화면 정보** - 해상도, 색상 깊이, 픽셀 비율
+- **폰트 감지** - 설치된 시스템 폰트 탐지
+- **권한 상태** - 카메라, 마이크, 위치 등 권한 확인
+- **SHA-256 해시** - 전체 핑거프린트의 고유 해시 생성
 
-- **Navigator 정보**: User Agent, 언어, 플랫폼, 하드웨어 동시성 등
-- **Screen 정보**: 해상도, 색상 깊이, 픽셀 비율
-- **WebGL 정보**: 렌더러, 벤더, 지원 확장 기능
-- **Audio 지문**: AudioContext 기반 고유 식별자
-- **Canvas 지문**: 2D Canvas 렌더링 기반 해시
-- **Font 감지**: 시스템 설치 폰트 목록
-- **기타**: 터치 지원, 배터리 상태, 연결 정보 등
+### 🌐 IP 분석 (Multi-Source)
+- **ProxyCheck.io + ip-api.com** 동시 조회로 정확도 향상
+- **위치 정보** - 국가, 지역, 도시, 좌표
+- **ISP/ASN 정보** - 인터넷 서비스 제공자 정보
+- **위협 탐지** - VPN, Proxy, Tor, Hosting, Bot 감지
+- **위험도 점수** - 0-100 종합 위험 점수
+- **지도 시각화** - Leaflet/OpenStreetMap 기반 위치 표시
 
-### 🌐 IP 분석 (ProxyCheck.io v3 API)
+### 📟 CLI API (ipinfo.io 스타일)
+```bash
+# 내 IP 정보 조회
+curl http://localhost:3000
 
-- **위치 정보**: 국가, 도시, ISP, ASN
-- **위협 감지**: VPN, Proxy, Tor, Hosting, Bot 탐지
-- **위험도 점수**: 0-100 기반 위험도 평가
-- **VPN 운영자 정보**: VPN 서비스 상세 정보
-
-### 🔐 보안 분석
-
-- **의심 항목 감지**: 자동화 도구/봇 특성 탐지
-- **누락 항목 분석**: 브라우저 설정으로 차단된 정보 표시
-- **완벽도 점수**: 수집된 지문의 품질 평가
+# 특정 IP 조회
+curl http://localhost:3000/8.8.8.8
+```
 
 ## 🚀 시작하기
 
-### 필수 요구사항
-
-- Node.js 18.x 이상
+### 요구사항
+- Node.js 18+
 - npm 또는 yarn
 
 ### 설치
 
 ```bash
 # 저장소 클론
-git clone https://github.com/your-username/fingerprint-detector.git
+git clone https://github.com/your-repo/fingerprint-detector.git
 cd fingerprint-detector
 
 # 의존성 설치
 npm install
 
-# 환경 변수 설정
-cp .env.example .env.local
+# 환경변수 설정
+cp .env.example .env
+
+# 개발 서버 시작
+npm run dev
 ```
 
-### 환경 변수
-
-`.env.local` 파일에 ProxyCheck.io API 키를 설정하세요:
-
-```env
-PROXYCHECK_API_KEY=your-api-key-here
-```
-
-> 💡 [ProxyCheck.io](https://proxycheck.io/)에서 무료 API 키를 발급받을 수 있습니다 (1,000 쿼리/일).
-
-### 실행
+### 빌드
 
 ```bash
-# 개발 서버 실행
-npm run dev
-
 # 프로덕션 빌드
 npm run build
+
+# 프로덕션 실행
 npm start
 ```
-
-브라우저에서 `http://localhost:3000`으로 접속하세요.
-
-## 🔧 curl API
-
-ipinfo.io처럼 터미널에서 curl로 IP 정보를 확인할 수 있습니다:
-
-```bash
-# 기본 사용
-curl localhost:3000/api
-
-# 배포 후
-curl https://your-domain.com/api
-```
-
-### 응답 예시
-
-```json
-{
-  "ip": "203.237.81.62",
-  "city": "Seoul",
-  "region": "Seoul",
-  "country": "South Korea",
-  "country_code": "KR",
-  "continent": "Asia",
-  "timezone": "Asia/Seoul",
-  "isp": "Korea Telecom",
-  "org": "Korea Telecom",
-  "asn": "AS4766",
-  "network_type": "Residential",
-  "location": {
-    "latitude": 37.566,
-    "longitude": 126.9784
-  },
-  "risk": {
-    "score": 0,
-    "level": "low",
-    "vpn": false,
-    "proxy": false,
-    "tor": false,
-    "hosting": false,
-    "bot": false,
-    "anonymous": false
-  }
-}
-```
-
-## 🛠️ 기술 스택
-
-| 분류            | 기술                      |
-| --------------- | ------------------------- |
-| **Framework**   | Next.js 16 (App Router)   |
-| **Language**    | TypeScript                |
-| **Styling**     | Tailwind CSS 4, Shadcn/UI |
-| **IP Analysis** | ProxyCheck.io v3 API      |
-| **State**       | React Hooks               |
 
 ## 📁 프로젝트 구조
 
 ```
-fingerprint-detector/
-├── src/
-│   ├── app/
-│   │   ├── api/
-│   │   │   └── route.ts        # curl JSON API
-│   │   ├── globals.css         # 전역 스타일 (다크 테마)
-│   │   ├── layout.tsx          # 루트 레이아웃
-│   │   └── page.tsx            # 메인 페이지
-│   ├── components/
-│   │   ├── ip/
-│   │   │   └── IPInfoCard.tsx  # IP 정보 카드
-│   │   ├── summary/
-│   │   │   └── BrowserSummaryCard.tsx
-│   │   └── ui/                 # Shadcn UI 컴포넌트
-│   └── lib/
-│       ├── fingerprint.ts      # 브라우저 지문 수집
-│       ├── ip-analyzer.ts      # ProxyCheck.io 분석기
-│       ├── ip-types.ts         # IP 타입 정의
-│       └── field-descriptions.ts # 필드 설명
-├── public/
-├── .env.local                  # 환경 변수
-└── package.json
+src/
+├── app/
+│   ├── api/
+│   │   ├── cli/              # CLI API 엔드포인트
+│   │   │   ├── route.ts      # GET / (내 IP)
+│   │   │   └── [ip]/route.ts # GET /:ip
+│   │   ├── ip/analyze/       # IP 분석 API
+│   │   └── route.ts          # 기본 API
+│   ├── fingerprint/          # 핑거프린트 페이지
+│   └── page.tsx              # 메인 페이지 (리다이렉트)
+├── components/
+│   ├── ip/
+│   │   ├── IPInfoCard.tsx    # IP 정보 카드
+│   │   └── IPMap.tsx         # 지도 컴포넌트
+│   ├── summary/
+│   │   └── BrowserSummaryCard.tsx
+│   └── ui/                   # shadcn/ui 컴포넌트
+├── lib/
+│   ├── fingerprint.ts        # 핑거프린트 수집 로직
+│   ├── ip-analyzer.ts        # ProxyCheck.io 분석기
+│   ├── ip-api-analyzer.ts    # ip-api.com 분석기
+│   ├── multi-source-analyzer.ts # 멀티소스 통합 분석
+│   └── types.ts              # 타입 정의
+└── middleware.ts             # curl/브라우저 라우팅
 ```
 
-## 📋 수집하는 데이터
+## 🔧 환경변수
 
-### Navigator (16개 항목)
+| 변수명 | 필수 | 설명 |
+|--------|------|------|
+| `PROXYCHECK_API_KEY` | ✅ | ProxyCheck.io API 키 |
 
-- userAgent, language, languages, platform
-- hardwareConcurrency, deviceMemory, maxTouchPoints
-- cookieEnabled, doNotTrack, pdfViewerEnabled
-- webdriver, vendor, appCodeName 등
+## 📡 API 엔드포인트
 
-### Screen (8개 항목)
+### 브라우저 접속
+- `GET /` → `/fingerprint`로 리다이렉트
+- `GET /fingerprint` → 핑거프린트 대시보드
 
-- width, height, availWidth, availHeight
-- colorDepth, pixelDepth, devicePixelRatio
-- orientation
+### CLI 접속 (curl)
+- `GET /` → JSON 형식으로 요청 IP 정보 반환
+- `GET /:ip` → 지정된 IP 정보 조회
 
-### WebGL (4개 항목)
+### 내부 API
+- `POST /api/ip/analyze` → IP 분석 (ProxyCheck + ip-api)
 
-- vendor, renderer, version, extensions
+## 🛠️ 기술 스택
 
-### Audio (2개 항목)
+- **Framework:** Next.js 16 (App Router, Turbopack)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **UI Components:** shadcn/ui
+- **Map:** Leaflet + OpenStreetMap
+- **IP Analysis:** ProxyCheck.io, ip-api.com
 
-- audioFingerprint (SHA-256 해시)
-- sampleRate
-
-### Canvas (2개 항목)
-
-- canvasFingerprint (SHA-256 해시)
-- supportedFormats
-
-### Fonts (2개 항목)
-
-- detectedFonts, fontCount
-
-### Hardware (4개 항목)
-
-- connectionType, batteryLevel, charging
-- deviceType
-
-## ⚠️ 주의사항
-
-- 이 도구는 **교육 및 연구 목적**으로 제작되었습니다.
-- 브라우저 지문 수집은 개인정보 보호에 민감한 영역입니다.
-- 실제 서비스에 적용 시 사용자 동의를 받아야 합니다.
-- ProxyCheck.io 무료 플랜은 일일 1,000 쿼리로 제한됩니다.
-
-## 📄 라이선스
+## 📝 라이선스
 
 MIT License
-
-## 🤝 기여하기
-
-이슈와 PR을 환영합니다!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request

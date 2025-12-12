@@ -255,7 +255,7 @@ export class ProxyCheckAnalyzer {
       },
       401: {
         message: "API 키가 유효하지 않습니다",
-        hint: ".env.local의 PROXYCHECK_API_KEY를 확인해주세요",
+        hint: ".env의 PROXYCHECK_API_KEY를 확인해주세요",
       },
       403: {
         message: "접근이 거부되었습니다",
@@ -301,7 +301,7 @@ export class ProxyCheckAnalyzer {
       hint =
         "일일 무료 쿼리 한도(1,000회)를 초과했습니다. 내일 다시 시도하세요.";
     } else if (message.includes("API Key")) {
-      hint = ".env.local의 PROXYCHECK_API_KEY가 올바른지 확인해주세요.";
+      hint = ".env의 PROXYCHECK_API_KEY가 올바른지 확인해주세요.";
     } else if (message.includes("requests per second")) {
       hint = "요청 속도가 너무 빠릅니다. 잠시 후 다시 시도하세요.";
     } else if (message.includes("No valid IP")) {
