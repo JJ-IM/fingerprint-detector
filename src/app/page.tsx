@@ -5,7 +5,10 @@ import { FingerprintCollector } from "@/lib/fingerprint";
 import { FingerprintData, IPData } from "@/lib/types";
 import { getCategoryTitle, getCategoryIcon } from "@/lib/categoryConfig";
 import { CATEGORY_DESCRIPTIONS } from "@/lib/constants";
-import { FIELD_DESCRIPTIONS } from "@/lib/field-descriptions";
+import {
+  FIELD_DESCRIPTIONS,
+  STATS_DESCRIPTIONS,
+} from "@/lib/field-descriptions";
 import {
   calculateEntropy,
   calculateUniqueness,
@@ -182,10 +185,10 @@ export default function Home() {
   return (
     <TooltipProvider delayDuration={300}>
       <div className="min-h-screen flex flex-col">
-        {/* Header with gradient border */}
-        <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/90 border-b border-border">
-          <div className="h-[2px] bg-linear-to-r from-transparent via-primary to-transparent"></div>
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+        {/* Header */}
+        <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/85 border-b border-border/40">
+          <div className="h-px bg-linear-to-r from-transparent via-primary/50 to-transparent"></div>
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <div className="flex items-center gap-3 sm:gap-4">
                 <div className="relative">
@@ -219,9 +222,38 @@ export default function Home() {
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-lg sm:text-xl font-bold text-gradient">
-                    Fingerprint Detector
-                  </h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-lg sm:text-xl font-bold text-gradient">
+                      Fingerprint Detector
+                    </h1>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button className="opacity-50 hover:opacity-100 transition-opacity">
+                          <svg
+                            className="w-4 h-4 text-muted-foreground"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="max-w-sm">
+                        <p className="text-xs">
+                          브라우저 핑거프린팅은 사용자의 브라우저 및 기기 정보를
+                          수집하여 고유한 식별자를 생성하는 기술입니다. 이
+                          도구는 수집 가능한 데이터를 분석하고 보안 취약점을
+                          탐지합니다.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   <p className="text-xs sm:text-sm text-muted-foreground">
                     브라우저 지문 분석 도구
                   </p>
@@ -281,28 +313,52 @@ export default function Home() {
         </header>
 
         {/* Hash Banner */}
-        <div className="bg-linear-to-r from-primary/5 via-card to-neon/5 border-b border-border">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+        <div className="bg-linear-to-r from-primary/5 via-card/50 to-neon/5 border-b border-border/40">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
-                  <svg
-                    className="w-4 h-4 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                  <span className="text-xs font-medium text-primary">
-                    SHA-256
-                  </span>
-                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 cursor-help">
+                      <svg
+                        className="w-4 h-4 text-primary"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                        />
+                      </svg>
+                      <span className="text-xs font-medium text-primary">
+                        SHA-256
+                      </span>
+                      <svg
+                        className="w-3 h-3 text-muted-foreground opacity-50"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    <p className="text-xs">
+                      SHA-256은 수집된 모든 핑거프린트 데이터를 암호화하여
+                      생성한 고유 해시값입니다. 같은 브라우저/기기 설정에서는
+                      동일한 해시가 생성됩니다.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
                 <code className="text-sm font-mono text-foreground/80 bg-muted/50 px-3 py-1.5 rounded-lg">
                   {hash.slice(0, 20)}...{hash.slice(-12)}
                 </code>
@@ -341,7 +397,7 @@ export default function Home() {
 
         {/* Search Results Overlay */}
         {searchQuery.trim() && filteredData && (
-          <div className="max-w-7xl mx-auto px-4 py-6 w-full">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <Card className="border-primary/20 glow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
@@ -452,7 +508,7 @@ export default function Home() {
         {!searchQuery.trim() && (
           <>
             {/* Summary Section */}
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 w-full">
+            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <IPInfoCard ipData={ipData} loading={ipLoading} />
                 <BrowserSummaryCard fingerprint={fingerprint} />
@@ -460,36 +516,58 @@ export default function Home() {
             </div>
 
             {/* Stats Cards */}
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 pb-4 sm:pb-6 w-full">
+            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4 lg:pb-6">
               <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
                 {/* Quality Score - Special Card */}
-                <Card
-                  className={`col-span-3 sm:col-span-1 relative overflow-hidden ${
-                    overallQuality.score >= 90
-                      ? "border-safe/30"
-                      : overallQuality.score >= 70
-                      ? "border-warning/30"
-                      : "border-danger/30"
-                  }`}
-                >
-                  <div
-                    className={`absolute inset-0 opacity-10 ${
-                      overallQuality.score >= 90
-                        ? "bg-linear-to-br from-safe to-transparent"
-                        : overallQuality.score >= 70
-                        ? "bg-linear-to-br from-warning to-transparent"
-                        : "bg-linear-to-br from-danger to-transparent"
-                    }`}
-                  ></div>
-                  <CardContent className="p-3 sm:p-4 text-center relative">
-                    <div className="text-2xl sm:text-3xl font-bold text-gradient">
-                      {overallQuality.score}%
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                      완벽도
-                    </p>
-                  </CardContent>
-                </Card>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card
+                      className={`col-span-3 sm:col-span-1 relative overflow-hidden cursor-help ${
+                        overallQuality.score >= 90
+                          ? "border-safe/30"
+                          : overallQuality.score >= 70
+                          ? "border-warning/30"
+                          : "border-danger/30"
+                      }`}
+                    >
+                      <div
+                        className={`absolute inset-0 opacity-10 ${
+                          overallQuality.score >= 90
+                            ? "bg-linear-to-br from-safe to-transparent"
+                            : overallQuality.score >= 70
+                            ? "bg-linear-to-br from-warning to-transparent"
+                            : "bg-linear-to-br from-danger to-transparent"
+                        }`}
+                      ></div>
+                      <CardContent className="p-3 sm:p-4 text-center relative">
+                        <div className="flex items-center justify-center gap-1">
+                          <div className="text-2xl sm:text-3xl font-bold text-gradient">
+                            {overallQuality.score}%
+                          </div>
+                          <svg
+                            className="w-3.5 h-3.5 text-muted-foreground opacity-50"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </div>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                          완벽도
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-xs">{STATS_DESCRIPTIONS.score}</p>
+                  </TooltipContent>
+                </Tooltip>
 
                 {/* Issue Cards */}
                 <Tooltip>
@@ -502,14 +580,29 @@ export default function Home() {
                       }`}
                     >
                       <CardContent className="p-3 sm:p-4 text-center">
-                        <div
-                          className={`text-xl sm:text-2xl font-bold ${
-                            overallQuality.suspicious > 0
-                              ? "text-danger"
-                              : "text-safe"
-                          }`}
-                        >
-                          {overallQuality.suspicious}
+                        <div className="flex items-center justify-center gap-1">
+                          <div
+                            className={`text-xl sm:text-2xl font-bold ${
+                              overallQuality.suspicious > 0
+                                ? "text-danger"
+                                : "text-safe"
+                            }`}
+                          >
+                            {overallQuality.suspicious}
+                          </div>
+                          <svg
+                            className="w-3.5 h-3.5 text-muted-foreground opacity-50"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
                         </div>
                         <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                           경고
@@ -517,8 +610,8 @@ export default function Home() {
                       </CardContent>
                     </Card>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    의심스러운 값이 감지된 항목 수
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-xs">{STATS_DESCRIPTIONS.suspicious}</p>
                   </TooltipContent>
                 </Tooltip>
 
@@ -532,14 +625,29 @@ export default function Home() {
                       }`}
                     >
                       <CardContent className="p-3 sm:p-4 text-center">
-                        <div
-                          className={`text-xl sm:text-2xl font-bold ${
-                            overallQuality.missing > 0
-                              ? "text-warning"
-                              : "text-safe"
-                          }`}
-                        >
-                          {overallQuality.missing}
+                        <div className="flex items-center justify-center gap-1">
+                          <div
+                            className={`text-xl sm:text-2xl font-bold ${
+                              overallQuality.missing > 0
+                                ? "text-warning"
+                                : "text-safe"
+                            }`}
+                          >
+                            {overallQuality.missing}
+                          </div>
+                          <svg
+                            className="w-3.5 h-3.5 text-muted-foreground opacity-50"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
                         </div>
                         <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                           누락
@@ -547,46 +655,116 @@ export default function Home() {
                       </CardContent>
                     </Card>
                   </TooltipTrigger>
-                  <TooltipContent>값이 누락된 항목 수</TooltipContent>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-xs">{STATS_DESCRIPTIONS.missing}</p>
+                  </TooltipContent>
                 </Tooltip>
 
-                <Card>
-                  <CardContent className="p-3 sm:p-4 text-center">
-                    <div className="text-xl sm:text-2xl font-bold text-primary">
-                      {fingerprint ? countProperties(fingerprint) : 0}
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                      수집 항목
-                    </p>
-                  </CardContent>
-                </Card>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card className="cursor-help">
+                      <CardContent className="p-3 sm:p-4 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <div className="text-xl sm:text-2xl font-bold text-primary">
+                            {fingerprint ? countProperties(fingerprint) : 0}
+                          </div>
+                          <svg
+                            className="w-3.5 h-3.5 text-muted-foreground opacity-50"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </div>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                          수집 항목
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-xs">{STATS_DESCRIPTIONS.total}</p>
+                  </TooltipContent>
+                </Tooltip>
 
-                <Card>
-                  <CardContent className="p-3 sm:p-4 text-center">
-                    <div className="text-xl sm:text-2xl font-bold text-primary">
-                      {fingerprint ? calculateEntropy(fingerprint) : 0}
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                      엔트로피
-                    </p>
-                  </CardContent>
-                </Card>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card className="cursor-help">
+                      <CardContent className="p-3 sm:p-4 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <div className="text-xl sm:text-2xl font-bold text-primary">
+                            {fingerprint ? calculateEntropy(fingerprint) : 0}
+                          </div>
+                          <svg
+                            className="w-3.5 h-3.5 text-muted-foreground opacity-50"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </div>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                          엔트로피
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-xs">{STATS_DESCRIPTIONS.entropy}</p>
+                  </TooltipContent>
+                </Tooltip>
 
-                <Card>
-                  <CardContent className="p-3 sm:p-4 text-center">
-                    <div className="text-xl sm:text-2xl font-bold text-primary">
-                      {fingerprint ? calculateUniqueness(fingerprint) : "0%"}
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                      고유성
-                    </p>
-                  </CardContent>
-                </Card>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card className="cursor-help">
+                      <CardContent className="p-3 sm:p-4 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <div className="text-xl sm:text-2xl font-bold text-primary">
+                            {fingerprint
+                              ? calculateUniqueness(fingerprint)
+                              : "0%"}
+                          </div>
+                          <svg
+                            className="w-3.5 h-3.5 text-muted-foreground opacity-50"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </div>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                          고유성
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-xs">{STATS_DESCRIPTIONS.uniqueness}</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </div>
 
             {/* Fingerprint Data Tabs */}
-            <main className="max-w-7xl mx-auto px-3 sm:px-4 pb-6 sm:pb-8 w-full flex-1">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 lg:pb-8 w-full flex-1">
               {fingerprint && (
                 <Card className="overflow-hidden">
                   <Tabs
@@ -600,9 +778,36 @@ export default function Home() {
                           {getCategoryIcon(activeCategory)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h2 className="font-bold text-base sm:text-lg">
-                            {getCategoryTitle(activeCategory)}
-                          </h2>
+                          <div className="flex items-center gap-2">
+                            <h2 className="font-bold text-base sm:text-lg">
+                              {getCategoryTitle(activeCategory)}
+                            </h2>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button className="opacity-50 hover:opacity-100 transition-opacity">
+                                  <svg
+                                    className="w-4 h-4 text-muted-foreground"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                  </svg>
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="right" className="max-w-sm">
+                                <p className="text-xs">
+                                  {CATEGORY_DESCRIPTIONS[activeCategory] ||
+                                    "이 카테고리에 대한 설명이 없습니다."}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
                           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2">
                             {CATEGORY_DESCRIPTIONS[activeCategory] ||
                               "이 카테고리에 대한 설명이 없습니다."}
@@ -765,35 +970,36 @@ export default function Home() {
                                         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                           {formatLabel(key)}
                                         </span>
-                                        {description && (
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <button className="opacity-50 hover:opacity-100 transition-opacity">
-                                                <svg
-                                                  className="w-3.5 h-3.5 text-muted-foreground"
-                                                  fill="none"
-                                                  stroke="currentColor"
-                                                  viewBox="0 0 24 24"
-                                                >
-                                                  <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                  />
-                                                </svg>
-                                              </button>
-                                            </TooltipTrigger>
-                                            <TooltipContent
-                                              side="top"
-                                              className="max-w-xs"
-                                            >
-                                              <p className="text-xs">
-                                                {description}
-                                              </p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        )}
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button className="opacity-50 hover:opacity-100 transition-opacity">
+                                              <svg
+                                                className="w-3.5 h-3.5 text-muted-foreground"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                              >
+                                                <path
+                                                  strokeLinecap="round"
+                                                  strokeLinejoin="round"
+                                                  strokeWidth={2}
+                                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                />
+                                              </svg>
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent
+                                            side="top"
+                                            className="max-w-xs"
+                                          >
+                                            <p className="text-xs">
+                                              {description ||
+                                                `브라우저의 ${formatLabel(
+                                                  key
+                                                )} 정보입니다. 클릭하여 자세한 내용을 확인하세요.`}
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
                                       </div>
                                       {isSuspicious && (
                                         <Badge
@@ -953,16 +1159,17 @@ export default function Home() {
                   </div>
 
                   {/* Description */}
-                  {FIELD_DESCRIPTIONS[selectedItem.key] && (
-                    <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                        설명
-                      </h4>
-                      <p className="text-sm text-muted-foreground bg-secondary/50 rounded-lg p-3">
-                        {FIELD_DESCRIPTIONS[selectedItem.key]}
-                      </p>
-                    </div>
-                  )}
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
+                      설명
+                    </h4>
+                    <p className="text-sm text-muted-foreground bg-secondary/50 rounded-lg p-3">
+                      {FIELD_DESCRIPTIONS[selectedItem.key] ||
+                        `브라우저에서 수집한 ${formatLabel(
+                          selectedItem.key
+                        )} 정보입니다. 이 값은 사용자의 브라우저 환경을 식별하는 데 사용될 수 있습니다.`}
+                    </p>
+                  </div>
 
                   {/* Warning Message */}
                   {selectedItem.isSuspicious && (
@@ -1026,11 +1233,36 @@ export default function Home() {
         </Dialog>
 
         {/* Footer */}
-        <footer className="border-t border-border bg-card/50 mt-auto">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-[10px] sm:text-xs text-muted-foreground text-center sm:text-left">
-              <p>이 도구는 교육 및 연구 목적으로 제작되었습니다.</p>
-              <p>모든 분석은 브라우저 내에서 수행됩니다.</p>
+        <footer className="border-t border-border/40 bg-background/50 backdrop-blur-sm mt-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <svg
+                    className="w-3.5 h-3.5 text-primary"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"
+                    />
+                  </svg>
+                </div>
+                <span className="font-medium text-foreground/80">
+                  Fingerprint Detector
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-center sm:text-left">
+                <p>교육 및 연구 목적으로 제작</p>
+                <div className="flex items-center justify-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-safe animate-pulse"></div>
+                  <span className="text-safe">클라이언트 사이드 분석</span>
+                </div>
+              </div>
             </div>
           </div>
         </footer>
