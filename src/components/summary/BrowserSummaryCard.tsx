@@ -22,7 +22,7 @@ function InfoRow({
   mono?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between py-1.5">
+    <div className="flex items-center justify-between py-1">
       <span className="text-xs text-muted-foreground">{label}</span>
       <span
         className={`text-sm text-right truncate max-w-[180px] ${
@@ -42,7 +42,7 @@ export default function BrowserSummaryCard({
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-1">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-neon/10 border border-neon/20 flex items-center justify-center">
             <svg

@@ -315,82 +315,83 @@ export default function Home() {
         {/* Hash Banner */}
         <div className="bg-linear-to-r from-primary/5 via-card/50 to-neon/5 border-b border-border/40">
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-              <div className="flex items-center gap-4">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 cursor-help">
-                      <svg
-                        className="w-4 h-4 text-primary"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                        />
-                      </svg>
-                      <span className="text-xs font-medium text-primary">
-                        SHA-256
-                      </span>
-                      <svg
-                        className="w-3 h-3 text-muted-foreground opacity-50"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-xs">
-                    <p className="text-xs">
-                      SHA-256은 수집된 모든 핑거프린트 데이터를 암호화하여
-                      생성한 고유 해시값입니다. 같은 브라우저/기기 설정에서는
-                      동일한 해시가 생성됩니다.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <code className="text-sm font-mono text-foreground/80 bg-muted/50 px-3 py-1.5 rounded-lg">
-                  {hash.slice(0, 20)}...{hash.slice(-12)}
-                </code>
-              </div>
-              <div className="flex items-center gap-3">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigator.clipboard.writeText(hash)}
-                      className="gap-2"
+            <div className="flex items-center justify-between gap-3 md:gap-4">
+              {/* 왼쪽: SHA-256 배지 */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 cursor-help shrink-0">
+                    <svg
+                      className="w-4 h-4 text-primary"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        />
-                      </svg>
-                      복사
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>전체 해시 복사</TooltipContent>
-                </Tooltip>
-              </div>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      />
+                    </svg>
+                    <span className="text-xs font-medium text-primary">
+                      SHA-256
+                    </span>
+                    <svg
+                      className="w-3 h-3 text-muted-foreground opacity-50 hidden lg:block"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p className="text-xs">
+                    SHA-256은 수집된 모든 핑거프린트 데이터를 암호화하여 생성한
+                    고유 해시값입니다. 같은 브라우저/기기 설정에서는 동일한
+                    해시가 생성됩니다.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+
+              {/* 중앙: 해시 값 (너비에 따라 자연스럽게 신축) */}
+              <code className="flex-1 text-sm font-mono text-foreground/80 bg-muted/50 px-3 py-1.5 rounded-lg text-center overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+                {hash}
+              </code>
+
+              {/* 오른쪽: 복사 버튼 */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigator.clipboard.writeText(hash)}
+                    className="gap-2 shrink-0"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span className="hidden sm:inline">복사</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>전체 해시 복사</TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -539,7 +540,7 @@ export default function Home() {
                             : "bg-linear-to-br from-danger to-transparent"
                         }`}
                       ></div>
-                      <CardContent className="p-3 sm:p-4 text-center relative">
+                      <CardContent className="p-2 sm:p-3 text-center relative">
                         <div className="flex items-center justify-center gap-1">
                           <div className="text-2xl sm:text-3xl font-bold text-gradient">
                             {overallQuality.score}%
@@ -579,7 +580,7 @@ export default function Home() {
                           : ""
                       }`}
                     >
-                      <CardContent className="p-3 sm:p-4 text-center">
+                      <CardContent className="p-2 sm:p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <div
                             className={`text-xl sm:text-2xl font-bold ${
@@ -624,7 +625,7 @@ export default function Home() {
                           : ""
                       }`}
                     >
-                      <CardContent className="p-3 sm:p-4 text-center">
+                      <CardContent className="p-2 sm:p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <div
                             className={`text-xl sm:text-2xl font-bold ${
@@ -663,7 +664,7 @@ export default function Home() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Card className="cursor-help">
-                      <CardContent className="p-3 sm:p-4 text-center">
+                      <CardContent className="p-2 sm:p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <div className="text-xl sm:text-2xl font-bold text-primary">
                             {fingerprint ? countProperties(fingerprint) : 0}
@@ -696,7 +697,7 @@ export default function Home() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Card className="cursor-help">
-                      <CardContent className="p-3 sm:p-4 text-center">
+                      <CardContent className="p-2 sm:p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <div className="text-xl sm:text-2xl font-bold text-primary">
                             {fingerprint ? calculateEntropy(fingerprint) : 0}
@@ -729,7 +730,7 @@ export default function Home() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Card className="cursor-help">
-                      <CardContent className="p-3 sm:p-4 text-center">
+                      <CardContent className="p-2 sm:p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <div className="text-xl sm:text-2xl font-bold text-primary">
                             {fingerprint

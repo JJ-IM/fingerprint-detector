@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ProxyCheckAnalyzer } from "@/lib/ip-analyzer";
+import { MultiSourceIPAnalyzer } from "@/lib/multi-source-analyzer";
 
 /**
- * ProxyCheck.io v3 API를 사용한 IP 분석
+ * 통합 IP 분석 API (Multi-Source)
+ *
+ * ProxyCheck.io + ip-api.com 두 API를 병렬 호출하여
+ * 더 정확하고 안정적인 IP 분석 결과를 제공합니다.
  *
  * GET /api/ip/analyze
  * GET /api/ip/analyze?ip=8.8.8.8
  *
- * 유료 플랜: 10,000+ 쿼리/일
- * API 버전: v3 (20-November-2025)
+ * 특징:
+ * - 병렬 호출로 응답 시간 최소화
+ * - 한 API 실패 시 다른 API로 폴백
+ * - VPN/Proxy 감지는 OR 로직 (하나라도 감지하면 true)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -67,8 +72,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // ProxyCheck 분석 실행
-    const analyzer = new ProxyCheckAnalyzer();
+    // 통합 분석기로 병렬 분석 실행
+    const analyzer = new MultiSourceIPAnalyzer();
     const result = await analyzer.analyze(clientIp);
 
     // 에러 발생 시
@@ -79,18 +84,21 @@ export async function GET(request: NextRequest) {
           error: result.error?.message || "IP 분석에 실패했습니다",
           hint: result.error?.hint,
           code: result.error?.code,
-          source: result.source,
+          sources: result.sources,
           data: null,
         },
-        { status: result.error?.code?.startsWith("HTTP_429") ? 429 : 400 }
+        { status: 400 }
       );
     }
 
     // 성공 응답
     return NextResponse.json({
       success: true,
-      source: result.source,
-      apiVersion: result.apiVersion,
+
+      // 데이터 소스 정보
+      sources: result.sources,
+      meta: result.meta,
+
       data: {
         // === 기본 정보 ===
         ip: result.basic?.ip || clientIp,
@@ -142,6 +150,12 @@ export async function GET(request: NextRequest) {
 
         // === VPN 운영자 정보 (있는 경우) ===
         operator: result.security?.operator || null,
+
+        // === ip-api 확장 필드 ===
+        mobile: result.extended?.mobile || false,
+        currency: result.extended?.currency || null,
+        district: result.extended?.district || null,
+        utcOffset: result.extended?.utcOffset || null,
       },
     });
   } catch (error) {
