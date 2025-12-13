@@ -88,6 +88,8 @@ CLI에서 사설 IP, 루프백, CGNAT, 멀티캐스트 등 RFC 예약 IP 조회 
 
 ## 🎯 데모
 
+**라이브 데모:** [https://ip.zer0.kr](https://ip.zer0.kr)
+
 ### 웹 인터페이스
 
 브라우저로 접속하면 핑거프린트 대시보드가 표시됩니다.
@@ -96,10 +98,10 @@ CLI에서 사설 IP, 루프백, CGNAT, 멀티캐스트 등 RFC 예약 IP 조회 
 
 ```bash
 # 내 IP 정보 조회
-curl https://your-domain.com
+curl -L ip.zer0.kr
 
 # 특정 IP 조회
-curl https://your-domain.com/8.8.8.8
+curl -L ip.zer0.kr/8.8.8.8
 ```
 
 **응답 예시:**
@@ -158,7 +160,7 @@ npm start
 
 ---
 
-## 📟 CLI 사용법
+## 📟 CLI 사용법 (직접 구축시)
 
 ### 내 IP 조회
 
@@ -367,3 +369,11 @@ MIT License - 자유롭게 사용, 수정, 배포 가능
 
 - **Email:** [admin@colio.net](mailto:admin@colio.net)
 - **GitHub:** [JJ-IM/fingerprint-detector](https://github.com/JJ-IM/fingerprint-detector)
+
+---
+
+## ⚠️ Disclaimer
+
+> 이 프로젝트는 **Vibe Coding** (바이브 코딩)으로 제작되었습니다.
+> AI 어시스턴트와 함께 빠르게 개발하는 방식으로 만들어져, 예상치 못한 버그나 미흡한 부분이 있을 수 있습니다.
+> 문제 발견 시 Issue나 PR을 환영합니다! 🙏
