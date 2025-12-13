@@ -34,15 +34,7 @@ function isValidIP(ip: string): boolean {
   return false;
 }
 
-// 도메인 형식 검증
-function isValidDomain(domain: string): boolean {
-  // 기본 도메인 패턴 (example.com, sub.example.co.kr 등)
-  const domainPattern =
-    /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
-  return domainPattern.test(domain);
-}
-
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const userAgent = request.headers.get("user-agent") || "";
 
@@ -79,13 +71,6 @@ export function middleware(request: NextRequest) {
     if (isValidIP(ipCandidate)) {
       return NextResponse.rewrite(
         new URL(`/api/cli/${ipCandidate}`, request.url)
-      );
-    }
-
-    // /도메인 요청: /api/cli/domain/도메인으로 리라이트
-    if (isValidDomain(ipCandidate)) {
-      return NextResponse.rewrite(
-        new URL(`/api/cli/domain/${ipCandidate}`, request.url)
       );
     }
   }
