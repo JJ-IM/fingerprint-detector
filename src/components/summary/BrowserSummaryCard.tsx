@@ -100,7 +100,10 @@ export default function BrowserSummaryCard({
             label="언어"
             value={formatLanguages(fingerprint.navigator.languages as string[])}
           />
-          <InfoRow label="시간대" value={fingerprint.timing.timezone as string} />
+          <InfoRow
+            label="시간대"
+            value={fingerprint.timing.timezone as string}
+          />
           <InfoRow
             label="CPU"
             value={`${fingerprint.hardware.hardwareConcurrency} 코어`}
@@ -127,7 +130,9 @@ export default function BrowserSummaryCard({
           {canvasImage && (
             <div className="pt-2 border-t border-border/50">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs text-muted-foreground">Canvas 핑거프린트</span>
+                <span className="text-xs text-muted-foreground">
+                  Canvas 핑거프린트
+                </span>
                 <button
                   onClick={() => setShowCanvasDialog(true)}
                   className="text-xs text-neon hover:underline cursor-pointer"
@@ -135,13 +140,13 @@ export default function BrowserSummaryCard({
                   확대보기
                 </button>
               </div>
-              <div 
+              <div
                 className="relative rounded-md overflow-hidden border border-border/50 bg-black/20 cursor-pointer hover:border-neon/50 transition-colors"
                 onClick={() => setShowCanvasDialog(true)}
               >
-                <img 
-                  src={canvasImage} 
-                  alt="Canvas Fingerprint" 
+                <img
+                  src={canvasImage}
+                  alt="Canvas Fingerprint"
                   className="w-full h-auto"
                   style={{ imageRendering: "pixelated" }}
                 />
@@ -180,30 +185,57 @@ export default function BrowserSummaryCard({
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="w-5 h-5 text-neon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
               Canvas 핑거프린트 이미지
             </DialogTitle>
             <DialogDescription>
-              이 이미지는 브라우저마다 미세하게 다르게 렌더링됩니다. 
-              폰트, 안티앨리어싱, 그래픽 카드 등에 따라 고유한 해시값이 생성됩니다.
+              이 이미지는 브라우저마다 미세하게 다르게 렌더링됩니다. 폰트,
+              안티앨리어싱, 그래픽 카드 등에 따라 고유한 해시값이 생성됩니다.
             </DialogDescription>
           </DialogHeader>
           {canvasImage && (
             <div className="space-y-3">
               <div className="rounded-lg overflow-hidden border-2 border-neon/30 bg-white">
-                <img 
-                  src={canvasImage} 
-                  alt="Canvas Fingerprint Full Size" 
+                <img
+                  src={canvasImage}
+                  alt="Canvas Fingerprint Full Size"
                   className="w-full h-auto"
                   style={{ imageRendering: "auto" }}
                 />
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
-                <p><span className="text-foreground font-medium">해시:</span> <code className="bg-muted px-1.5 py-0.5 rounded">{fingerprint.canvas.hash as string}</code></p>
-                <p><span className="text-foreground font-medium">크기:</span> {fingerprint.canvas.width as number} × {fingerprint.canvas.height as number}px</p>
-                <p><span className="text-foreground font-medium">데이터 길이:</span> {(fingerprint.canvas.dataURLLength as number)?.toLocaleString() || "N/A"} bytes</p>
+                <p>
+                  <span className="text-foreground font-medium">해시:</span>{" "}
+                  <code className="bg-muted px-1.5 py-0.5 rounded">
+                    {fingerprint.canvas.hash as string}
+                  </code>
+                </p>
+                <p>
+                  <span className="text-foreground font-medium">크기:</span>{" "}
+                  {fingerprint.canvas.width as number} ×{" "}
+                  {fingerprint.canvas.height as number}px
+                </p>
+                <p>
+                  <span className="text-foreground font-medium">
+                    데이터 길이:
+                  </span>{" "}
+                  {(
+                    fingerprint.canvas.dataURLLength as number
+                  )?.toLocaleString() || "N/A"}{" "}
+                  bytes
+                </p>
               </div>
             </div>
           )}
