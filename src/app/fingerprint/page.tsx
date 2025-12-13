@@ -71,7 +71,8 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<DataItemDetail | null>(null);
-  const [selectedCanvasImage, setSelectedCanvasImage] = useState<CanvasImageItem | null>(null);
+  const [selectedCanvasImage, setSelectedCanvasImage] =
+    useState<CanvasImageItem | null>(null);
 
   useEffect(() => {
     const collectFingerprint = async () => {
@@ -952,69 +953,124 @@ export default function Home() {
                         className="p-0 m-0"
                       >
                         <CardContent className="p-3 sm:p-4">
-                          {category === "canvas" && Array.isArray(fingerprint.canvas?.images) && (fingerprint.canvas.images as CanvasImageItem[]).length > 0 && (
-                            <div className="mb-6">
-                              <div className="flex items-center gap-2 mb-3">
-                                <svg className="w-5 h-5 text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <h4 className="text-sm font-semibold">Canvas 테스트 이미지</h4>
-                                <Badge variant="secondary" className="text-xs">
-                                  {(fingerprint.canvas.images as CanvasImageItem[]).length}개 테스트
-                                </Badge>
-                              </div>
-                              <p className="text-xs text-muted-foreground mb-4">
-                                각 이미지는 브라우저마다 미세하게 다르게 렌더링됩니다. 폰트, 안티앨리어싱, GPU 등에 따라 고유한 해시값이 생성됩니다.
-                              </p>
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                {(fingerprint.canvas.images as CanvasImageItem[]).map((img, idx) => (
-                                  <div 
-                                    key={idx}
-                                    onClick={() => setSelectedCanvasImage(img)}
-                                    className="group relative rounded-lg border border-border/50 bg-black/20 overflow-hidden cursor-pointer hover:border-neon/50 transition-all hover:shadow-lg"
+                          {category === "canvas" &&
+                            Array.isArray(fingerprint.canvas?.images) &&
+                            (fingerprint.canvas.images as CanvasImageItem[])
+                              .length > 0 && (
+                              <div className="mb-6">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <svg
+                                    className="w-5 h-5 text-neon"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
                                   >
-                                    <div className="absolute top-2 left-2 z-10">
-                                      <Badge variant="secondary" className="text-[10px] backdrop-blur-sm bg-background/80">
-                                        테스트 {idx + 1}
-                                      </Badge>
-                                    </div>
-                                    <div className="p-2 pt-8">
-                                      <img 
-                                        src={img.image} 
-                                        alt={img.name}
-                                        className="w-full h-auto rounded border border-border/30"
-                                        style={{ imageRendering: "auto" }}
-                                      />
-                                    </div>
-                                    <div className="p-2 pt-0 space-y-1">
-                                      <p className="text-xs font-medium truncate">{img.name}</p>
-                                      <p className="text-[10px] text-muted-foreground line-clamp-1">{img.description}</p>
-                                      <code className="text-[9px] text-neon/70 font-mono block truncate">{img.hash.slice(0, 16)}...</code>
-                                    </div>
-                                    <div className="absolute inset-0 bg-neon/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                      <div className="absolute bottom-2 right-2 text-neon">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                                        </svg>
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={1.5}
+                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                  <h4 className="text-sm font-semibold">
+                                    Canvas 테스트 이미지
+                                  </h4>
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {
+                                      (
+                                        fingerprint.canvas
+                                          .images as CanvasImageItem[]
+                                      ).length
+                                    }
+                                    개 테스트
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground mb-4">
+                                  각 이미지는 브라우저마다 미세하게 다르게
+                                  렌더링됩니다. 폰트, 안티앨리어싱, GPU 등에
+                                  따라 고유한 해시값이 생성됩니다.
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                  {(
+                                    fingerprint.canvas
+                                      .images as CanvasImageItem[]
+                                  ).map((img, idx) => (
+                                    <div
+                                      key={idx}
+                                      onClick={() =>
+                                        setSelectedCanvasImage(img)
+                                      }
+                                      className="group relative rounded-lg border border-border/50 bg-black/20 overflow-hidden cursor-pointer hover:border-neon/50 transition-all hover:shadow-lg"
+                                    >
+                                      <div className="absolute top-2 left-2 z-10">
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-[10px] backdrop-blur-sm bg-background/80"
+                                        >
+                                          테스트 {idx + 1}
+                                        </Badge>
+                                      </div>
+                                      <div className="p-2 pt-8">
+                                        <img
+                                          src={img.image}
+                                          alt={img.name}
+                                          className="w-full h-auto rounded border border-border/30"
+                                          style={{ imageRendering: "auto" }}
+                                        />
+                                      </div>
+                                      <div className="p-2 pt-0 space-y-1">
+                                        <p className="text-xs font-medium truncate">
+                                          {img.name}
+                                        </p>
+                                        <p className="text-[10px] text-muted-foreground line-clamp-1">
+                                          {img.description}
+                                        </p>
+                                        <code className="text-[9px] text-neon/70 font-mono block truncate">
+                                          {img.hash.slice(0, 16)}...
+                                        </code>
+                                      </div>
+                                      <div className="absolute inset-0 bg-neon/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <div className="absolute bottom-2 right-2 text-neon">
+                                          <svg
+                                            className="w-5 h-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth={2}
+                                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                                            />
+                                          </svg>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
+                                <div className="mt-3 pt-3 border-t border-border/30">
+                                  <p className="text-xs text-muted-foreground">
+                                    <span className="text-foreground font-medium">
+                                      통합 해시:
+                                    </span>{" "}
+                                    <code className="bg-muted px-1.5 py-0.5 rounded text-neon">
+                                      {fingerprint.canvas.hash as string}
+                                    </code>
+                                  </p>
+                                </div>
                               </div>
-                              <div className="mt-3 pt-3 border-t border-border/30">
-                                <p className="text-xs text-muted-foreground">
-                                  <span className="text-foreground font-medium">통합 해시:</span>{" "}
-                                  <code className="bg-muted px-1.5 py-0.5 rounded text-neon">{fingerprint.canvas.hash as string}</code>
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                          
+                            )}
+
                           <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                             {Object.entries(fingerprint[category])
-                              .filter(([key]) => key !== "images" && key !== "image") // 이미지 필드는 위에서 별도 표시
-                              .map(
-                              ([key, value]) => {
+                              .filter(
+                                ([key]) => key !== "images" && key !== "image"
+                              ) // 이미지 필드는 위에서 별도 표시
+                              .map(([key, value]) => {
                                 const isSuspicious = checkSuspicious(
                                   key,
                                   value
@@ -1150,8 +1206,7 @@ export default function Home() {
                                     </div>
                                   </div>
                                 );
-                              }
-                            )}
+                              })}
                           </div>
                         </CardContent>
                       </TabsContent>
@@ -1332,12 +1387,24 @@ export default function Home() {
                 <DialogHeader>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-neon/20 text-neon">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
                       </svg>
                     </div>
                     <div>
-                      <DialogTitle className="text-lg">{selectedCanvasImage.name}</DialogTitle>
+                      <DialogTitle className="text-lg">
+                        {selectedCanvasImage.name}
+                      </DialogTitle>
                       <DialogDescription className="text-xs">
                         Canvas 핑거프린트 테스트 이미지
                       </DialogDescription>
@@ -1348,8 +1415,8 @@ export default function Home() {
                 <div className="space-y-4 mt-4">
                   {/* Image */}
                   <div className="rounded-lg overflow-hidden border-2 border-neon/30 bg-white">
-                    <img 
-                      src={selectedCanvasImage.image} 
+                    <img
+                      src={selectedCanvasImage.image}
                       alt={selectedCanvasImage.name}
                       className="w-full h-auto"
                       style={{ imageRendering: "auto" }}
@@ -1379,14 +1446,25 @@ export default function Home() {
                   {/* Info */}
                   <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
                     <div className="flex items-start gap-2">
-                      <svg className="w-5 h-5 text-primary shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      <svg
+                        className="w-5 h-5 text-primary shrink-0 mt-0.5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       <div>
-                        <p className="text-sm font-medium text-primary">왜 다른 해시가 생성되나요?</p>
+                        <p className="text-sm font-medium text-primary">
+                          왜 다른 해시가 생성되나요?
+                        </p>
                         <p className="text-xs text-primary/80 mt-1">
-                          동일한 이미지라도 브라우저, OS, GPU, 폰트, 안티앨리어싱 설정에 따라 
-                          픽셀 단위로 미세한 차이가 발생합니다. 이 차이가 고유한 해시값을 만듭니다.
+                          동일한 이미지라도 브라우저, OS, GPU, 폰트,
+                          안티앨리어싱 설정에 따라 픽셀 단위로 미세한 차이가
+                          발생합니다. 이 차이가 고유한 해시값을 만듭니다.
                         </p>
                       </div>
                     </div>

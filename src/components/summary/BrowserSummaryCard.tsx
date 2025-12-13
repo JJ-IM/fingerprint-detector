@@ -135,7 +135,11 @@ export default function BrowserSummaryCard({
         />
         <InfoRow
           label="화면 비율"
-          value={`${fingerprint.screen.devicePixelRatio || 1}x ${Number(fingerprint.screen.devicePixelRatio) > 1 ? "(HiDPI)" : "(표준)"}`}
+          value={`${fingerprint.screen.devicePixelRatio || 1}x ${
+            Number(fingerprint.screen.devicePixelRatio) > 1
+              ? "(HiDPI)"
+              : "(표준)"
+          }`}
           tooltip="논리적 픽셀 대비 물리적 픽셀 비율입니다. 레티나/고해상도 디스플레이는 2x 이상입니다."
         />
 
@@ -156,7 +160,11 @@ export default function BrowserSummaryCard({
               </Badge>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">터치스크린 지원 여부 (최대 {Number(fingerprint.hardware.maxTouchPoints) || 0}개 터치 포인트)</p>
+              <p className="text-xs">
+                터치스크린 지원 여부 (최대{" "}
+                {Number(fingerprint.hardware.maxTouchPoints) || 0}개 터치
+                포인트)
+              </p>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -169,12 +177,17 @@ export default function BrowserSummaryCard({
               </Badge>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">WebGL 그래픽 API 지원 여부 (3D 렌더링용)</p>
+              <p className="text-xs">
+                WebGL 그래픽 API 지원 여부 (3D 렌더링용)
+              </p>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Badge variant="outline" className="text-xs font-mono cursor-help">
+              <Badge
+                variant="outline"
+                className="text-xs font-mono cursor-help"
+              >
                 {truncateText((fingerprint.canvas.hash as string) || "N/A", 8)}
               </Badge>
             </TooltipTrigger>

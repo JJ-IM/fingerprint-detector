@@ -295,7 +295,12 @@ export class FingerprintCollector {
   }
 
   private async collectCanvas(): Promise<Record<string, unknown>> {
-    const images: { name: string; description: string; image: string; hash: string }[] = [];
+    const images: {
+      name: string;
+      description: string;
+      image: string;
+      hash: string;
+    }[] = [];
 
     // === 테스트 1: 텍스트 & 도형 (기본 핑거프린트) ===
     const canvas1 = document.createElement("canvas");
@@ -413,7 +418,9 @@ export class FingerprintCollector {
     }
 
     // 통합 해시 생성
-    const combinedHash = await this.hashString(images.map(i => i.hash).join(""));
+    const combinedHash = await this.hashString(
+      images.map((i) => i.hash).join("")
+    );
 
     return {
       supported: true,
