@@ -339,8 +339,8 @@ export class FingerprintCollector {
     return {
       supported: true,
       hash: hash,
+      image: dataURL, // Canvas 핑거프린트에 사용된 이미지
       dataURLLength: dataURL.length,
-      dataURLPrefix: dataURL.substring(0, 50) + "...",
       width: canvas.width,
       height: canvas.height,
     };

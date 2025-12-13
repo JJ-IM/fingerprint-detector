@@ -398,18 +398,10 @@ export class LieDetector {
       });
     }
 
-    // colorDepth와 pixelDepth 불일치
-    if (scr.colorDepth !== scr.pixelDepth) {
-      // 일부 브라우저에서는 다를 수 있지만, 대부분 같아야 함
-      this.lies.push({
-        category: "Screen",
-        attribute: "colorDepth/pixelDepth",
-        expected: "동일한 값",
-        actual: `colorDepth: ${scr.colorDepth}, pixelDepth: ${scr.pixelDepth}`,
-        severity: "low",
-        description: "colorDepth와 pixelDepth가 다릅니다.",
-      });
-    }
+    // colorDepth와 pixelDepth 불일치 검사 제거
+    // HDR 모니터(Wide Color Gamut)에서는 정상적으로 다를 수 있음
+    // 예: colorDepth=24, pixelDepth=30 (10-bit HDR)
+    // 참고: https://developer.mozilla.org/en-US/docs/Web/API/Screen/pixelDepth
 
     // 비현실적인 해상도
     if (scr.width < 100 || scr.height < 100) {
@@ -622,22 +614,30 @@ export class LieDetector {
       });
     }
 
-    // performance.now() 정밀도 확인 (핑거프린트 방지 도구는 정밀도를 낮춤)
+    // performance.now() 정밀도 확인
+    // 주의: 현대 브라우저는 Spectre 보안 대응으로 정밀도를 의도적으로 낮춤 (5μs~100μs)
+    // 따라서 너무 엄격하게 판단하면 안 됨
     const samples: number[] = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 100; i++) {
+      // 약간의 연산을 추가해서 시간 차이를 만듬
+      let sum = 0;
+      for (let j = 0; j < 1000; j++) sum += j;
       samples.push(performance.now());
+      void sum; // 최적화 방지
     }
 
     const uniqueSamples = new Set(samples);
-    if (uniqueSamples.size === 1) {
+    // 100번 샘플링에서 3개 미만의 고유값이면 의심스러움
+    // (Spectre 대응으로도 보통 10개 이상의 고유값이 나옴)
+    if (uniqueSamples.size < 3) {
       this.lies.push({
         category: "Timing",
         attribute: "performance.now",
-        expected: "고정밀 타이밍",
-        actual: "저정밀 또는 고정 값",
+        expected: "연산 간 시간 차이 감지",
+        actual: `${uniqueSamples.size}개의 고유값만 감지`,
         severity: "medium",
         description:
-          "performance.now()의 정밀도가 낮습니다 (프라이버시 보호 도구 가능성).",
+          "performance.now()가 완전히 고정되어 있습니다 (핑거프린트 방지 도구 가능성).",
       });
     }
   }
@@ -684,18 +684,10 @@ export class LieDetector {
       }
     }
 
-    // Firefox UA인데 Firefox 전용 특성 없음
-    if (ua.includes("firefox")) {
-      if (!("InstallTrigger" in window)) {
-        // 최신 Firefox에서는 제거됨, 경고 수준으로만
-        this.inconsistencies.push({
-          attributes: ["userAgent", "InstallTrigger"],
-          description:
-            "Firefox User-Agent인데 일부 Firefox 특성이 없습니다 (최신 버전일 수 있음).",
-          severity: "low",
-        });
-      }
-    }
+    // InstallTrigger 검사 제거
+    // Firefox 102 (2022-06)에서 InstallTrigger가 완전히 제거됨
+    // 참고: https://bugzilla.mozilla.org/show_bug.cgi?id=1766498
+    // 현재 Firefox 사용자 대부분이 102+ 버전이므로 더 이상 유효한 검사가 아님
 
     // Safari UA인데 Safari 전용 특성
     if (
