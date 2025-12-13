@@ -23,7 +23,7 @@ function ensureLogDir() {
 export function getTimestamp(): string {
   const tz = process.env.TZ || "Asia/Seoul";
   const now = new Date();
-  
+
   // 해당 타임존으로 변환
   const formatted = now.toLocaleString("sv-SE", {
     timeZone: tz,
@@ -35,7 +35,7 @@ export function getTimestamp(): string {
     second: "2-digit",
     hour12: false,
   });
-  
+
   // "2025-12-13 17:02:30" -> "2025-12-13T17:02:30"
   return `[${formatted.replace(" ", "T")}]`;
 }
