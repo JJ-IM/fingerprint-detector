@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { MultiSourceIPAnalyzer } from "@/lib/multi-source-analyzer";
+import { logIPQuery } from "@/lib/ip-logger";
 
 // IP 주소 추출
 function getClientIP(request: NextRequest): string {
@@ -166,6 +167,23 @@ export async function GET(request: NextRequest) {
   // IP 분석 수행
   const analyzer = new MultiSourceIPAnalyzer();
   const result = await analyzer.analyze(clientIP);
+
+  // IP 조회 로깅 (자기 IP 조회)
+  logIPQuery({
+    timestamp: new Date().toISOString(),
+    requestIp: getClientIP(request),
+    queriedIp: clientIP,
+    country: result.basic?.country,
+    city: result.basic?.city,
+    riskScore: result.security?.riskScore,
+    vpn: result.security?.isVPN,
+    proxy: result.security?.isProxy,
+    tor: result.security?.isTor,
+    source: "curl_self",
+    userAgent: request.headers.get("user-agent") || undefined,
+    proxyCheckUsed: result.sources?.proxycheck?.success ?? false,
+    ipApiUsed: result.sources?.ipApi?.success ?? false,
+  });
 
   const formatted = formatResponse(result, clientIP);
 

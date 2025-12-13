@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MultiSourceIPAnalyzer } from "@/lib/multi-source-analyzer";
+import { logIPQuery } from "@/lib/ip-logger";
+import { debugLog } from "@/lib/debug-logger";
 
 /**
  * 통합 IP 분석 API (Multi-Source)
@@ -52,9 +54,9 @@ export async function GET(request: NextRequest) {
         );
         const ipDetectData = await ipDetectResponse.json();
         clientIp = ipDetectData.query || "";
-        console.log("[IP Analyze] Detected IP from ip-api.com:", clientIp);
+        debugLog("IP Analyze", `Detected IP from ip-api.com: ${clientIp}`);
       } catch (e) {
-        console.error("[IP Analyze] Failed to detect IP:", e);
+        debugLog("IP Analyze", `Failed to detect IP: ${e}`);
       }
     }
 
@@ -76,8 +78,23 @@ export async function GET(request: NextRequest) {
     const analyzer = new MultiSourceIPAnalyzer();
     const result = await analyzer.analyze(clientIp);
 
+    // 요청자 IP 추출 (로깅용)
+    const requestorIp =
+      cfConnecting || forwarded?.split(",")[0].trim() || realIp || "unknown";
+
     // 에러 발생 시
     if (!result.success || result.error) {
+      // 실패해도 로깅
+      logIPQuery({
+        timestamp: new Date().toISOString(),
+        requestIp: requestorIp,
+        queriedIp: clientIp,
+        source: "finger",
+        userAgent: request.headers.get("user-agent") || undefined,
+        proxyCheckUsed: result.sources?.proxycheck?.success ?? false,
+        ipApiUsed: result.sources?.ipApi?.success ?? false,
+      });
+
       return NextResponse.json(
         {
           success: false,
@@ -90,6 +107,23 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // IP 조회 로깅
+    logIPQuery({
+      timestamp: new Date().toISOString(),
+      requestIp: requestorIp,
+      queriedIp: clientIp,
+      country: result.basic?.country,
+      city: result.basic?.city,
+      riskScore: result.security?.riskScore,
+      vpn: result.security?.isVPN,
+      proxy: result.security?.isProxy,
+      tor: result.security?.isTor,
+      source: "finger",
+      userAgent: request.headers.get("user-agent") || undefined,
+      proxyCheckUsed: result.sources?.proxycheck?.success ?? false,
+      ipApiUsed: result.sources?.ipApi?.success ?? false,
+    });
 
     // 성공 응답
     return NextResponse.json({

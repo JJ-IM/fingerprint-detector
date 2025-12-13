@@ -19,6 +19,7 @@ import {
   IPAnalysisResult,
   calculateRiskLevel,
 } from "./ip-types";
+import { debugLog } from "./debug-logger";
 
 export class ProxyCheckAnalyzer {
   private readonly apiKey: string;
@@ -42,7 +43,7 @@ export class ProxyCheckAnalyzer {
   async analyze(ip?: string): Promise<IPAnalysisResult> {
     try {
       const url = this.buildUrl(ip);
-      console.log(`[ProxyCheck] Analyzing: ${ip || "auto-detect"}`);
+      debugLog("ProxyCheck", `Analyzing: ${ip || "auto-detect"}`);
 
       const response = await fetch(url, {
         method: "GET",

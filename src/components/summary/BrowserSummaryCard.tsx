@@ -109,7 +109,7 @@ export default function BrowserSummaryCard({
           )}
         />
 
-        <div className="pt-2 flex flex-wrap gap-1.5">
+        <div className="pt-2 min-[500px]:pt-3 flex flex-wrap gap-1 min-[400px]:gap-1.5 min-[500px]:gap-2">
           <Badge
             variant={
               Number(fingerprint.hardware.maxTouchPoints) > 0

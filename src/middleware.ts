@@ -37,14 +37,6 @@ function isValidIP(ip: string): boolean {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const userAgent = request.headers.get("user-agent") || "";
-  const accept = request.headers.get("accept") || "";
-
-  console.log(
-    `[Middleware] Path: ${pathname}, UA: ${userAgent.slice(
-      0,
-      50
-    )}, Accept: ${accept}`
-  );
 
   // API 경로는 그대로 통과
   if (pathname.startsWith("/api")) {

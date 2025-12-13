@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { FingerprintCollector } from "@/lib/fingerprint";
 import { FingerprintData, IPData } from "@/lib/types";
 import { getCategoryTitle, getCategoryIcon } from "@/lib/categoryConfig";
 import { CATEGORY_DESCRIPTIONS } from "@/lib/constants";
@@ -39,6 +38,12 @@ import {
 } from "@/components/ui/dialog";
 import IPInfoCard from "@/components/ip/IPInfoCard";
 import BrowserSummaryCard from "@/components/summary/BrowserSummaryCard";
+import FingerprintScoreCard from "@/components/score/FingerprintScoreCard";
+import LieDetectionCard from "@/components/score/LieDetectionCard";
+import {
+  EnhancedFingerprintCollector,
+  EnhancedFingerprintResult,
+} from "@/lib/fingerprint-enhanced";
 
 interface DataItemDetail {
   key: string;
@@ -50,6 +55,8 @@ interface DataItemDetail {
 
 export default function Home() {
   const [fingerprint, setFingerprint] = useState<FingerprintData | null>(null);
+  const [enhancedResult, setEnhancedResult] =
+    useState<EnhancedFingerprintResult | null>(null);
   const [ipData, setIpData] = useState<IPData | null>(null);
   const [ipLoading, setIpLoading] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -60,24 +67,21 @@ export default function Home() {
 
   useEffect(() => {
     const collectFingerprint = async () => {
-      const collector = new FingerprintCollector();
-      const data = await collector.collect();
-      setFingerprint(data);
+      // 향상된 수집기 사용 (FingerprintJS + Lie Detection 통합)
+      const enhancedCollector = new EnhancedFingerprintCollector();
+      const result = await enhancedCollector.collect();
 
-      if (data) {
-        setActiveCategory(Object.keys(data)[0]);
+      // 기존 fingerprint 데이터 설정
+      setFingerprint(result.raw);
+      // 향상된 결과 설정 (점수, 거짓 탐지 포함)
+      setEnhancedResult(result);
+
+      if (result.raw) {
+        setActiveCategory(Object.keys(result.raw)[0]);
       }
 
-      const hashStr = JSON.stringify(data);
-      const hashBuffer = await crypto.subtle.digest(
-        "SHA-256",
-        new TextEncoder().encode(hashStr)
-      );
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-      setHash(hashHex);
+      // 통합 해시 사용
+      setHash(result.combinedHash);
       setLoading(false);
     };
 
@@ -188,13 +192,13 @@ export default function Home() {
         {/* Header */}
         <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/85 border-b border-border/40">
           <div className="h-px bg-linear-to-r from-transparent via-primary/50 to-transparent"></div>
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-              <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-full max-w-7xl mx-auto px-4 min-[500px]:px-6 lg:px-8 py-3 lg:py-4">
+            <div className="flex items-center justify-between gap-3 min-[500px]:gap-4">
+              <div className="flex items-center gap-3 min-[500px]:gap-4 shrink-0">
                 <div className="relative">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-linear-to-br from-primary/20 to-neon/20 border border-primary/30 flex items-center justify-center glow-sm">
+                  <div className="w-10 h-10 min-[500px]:w-12 min-[500px]:h-12 rounded-xl bg-linear-to-br from-primary/20 to-neon/20 border border-primary/30 flex items-center justify-center glow-sm">
                     <svg
-                      className="w-5 h-5 sm:w-6 sm:h-6 text-primary"
+                      className="w-5 h-5 min-[500px]:w-6 min-[500px]:h-6 text-primary"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -207,9 +211,9 @@ export default function Home() {
                       />
                     </svg>
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-safe border-2 border-background flex items-center justify-center">
+                  <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 min-[500px]:w-4 min-[500px]:h-4 rounded-full bg-safe border-2 border-background flex items-center justify-center">
                     <svg
-                      className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-background"
+                      className="w-2 h-2 min-[500px]:w-2.5 min-[500px]:h-2.5 text-background"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -223,7 +227,7 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-lg sm:text-xl font-bold text-gradient">
+                    <h1 className="text-base min-[400px]:text-lg min-[500px]:text-xl font-bold text-gradient">
                       Fingerprint Detector
                     </h1>
                     <Tooltip>
@@ -254,19 +258,19 @@ export default function Home() {
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
+                  <p className="text-[11px] min-[400px]:text-xs min-[500px]:text-sm text-muted-foreground">
                     브라우저 지문 분석 도구
                   </p>
                 </div>
               </div>
 
               {/* Search Bar */}
-              <div className="w-full sm:flex-1 sm:max-w-md">
+              <div className="w-32 min-[400px]:w-40 min-[500px]:w-48 md:w-64 lg:w-80 shrink">
                 <div className="relative group">
                   <div className="absolute inset-0 bg-linear-to-r from-primary/20 to-neon/20 rounded-xl blur-sm opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
                   <div className="relative flex items-center">
                     <svg
-                      className="absolute left-3 sm:left-4 w-4 h-4 text-muted-foreground"
+                      className="absolute left-2.5 min-[500px]:left-3 w-3.5 h-3.5 min-[500px]:w-4 min-[500px]:h-4 text-muted-foreground"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -280,18 +284,18 @@ export default function Home() {
                     </svg>
                     <input
                       type="text"
-                      placeholder="지문 데이터 검색..."
+                      placeholder="검색..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 sm:pl-11 pr-4 py-2 sm:py-2.5 text-sm bg-secondary/50 border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:bg-secondary transition-all"
+                      className="w-full pl-8 min-[500px]:pl-10 pr-3 py-1.5 min-[500px]:py-2 text-xs min-[500px]:text-sm bg-secondary/50 border border-border rounded-lg min-[500px]:rounded-xl focus:outline-none focus:border-primary/50 focus:bg-secondary transition-all"
                     />
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery("")}
-                        className="absolute right-3 p-1 rounded-md hover:bg-muted"
+                        className="absolute right-2 p-0.5 rounded-md hover:bg-muted"
                       >
                         <svg
-                          className="w-4 h-4 text-muted-foreground"
+                          className="w-3.5 h-3.5 min-[500px]:w-4 min-[500px]:h-4 text-muted-foreground"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -516,14 +520,30 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Score & Lie Detection Section */}
+            {enhancedResult && (
+              <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4 lg:pb-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                  <FingerprintScoreCard
+                    score={enhancedResult.score}
+                    visitorId={enhancedResult.fingerprintjs.visitorId}
+                    confidence={enhancedResult.fingerprintjs.confidence}
+                  />
+                  <LieDetectionCard
+                    lieDetection={enhancedResult.lieDetection}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Stats Cards */}
-            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4 lg:pb-6">
-              <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+            <div className="w-full max-w-7xl mx-auto px-4 min-[500px]:px-6 lg:px-8 pb-4 lg:pb-6">
+              <div className="grid grid-cols-3 min-[500px]:grid-cols-3 lg:grid-cols-6 gap-1.5 min-[400px]:gap-2 min-[500px]:gap-3">
                 {/* Quality Score - Special Card */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Card
-                      className={`col-span-3 sm:col-span-1 relative overflow-hidden cursor-help ${
+                      className={`relative overflow-hidden cursor-help ${
                         overallQuality.score >= 90
                           ? "border-safe/30"
                           : overallQuality.score >= 70
@@ -540,9 +560,9 @@ export default function Home() {
                             : "bg-linear-to-br from-danger to-transparent"
                         }`}
                       ></div>
-                      <CardContent className="p-2 sm:p-3 text-center relative">
+                      <CardContent className="p-1.5 min-[400px]:p-2 min-[500px]:p-3 text-center relative">
                         <div className="flex items-center justify-center gap-1">
-                          <div className="text-2xl sm:text-3xl font-bold text-gradient">
+                          <div className="text-xl min-[400px]:text-2xl min-[500px]:text-3xl font-bold text-gradient">
                             {overallQuality.score}%
                           </div>
                           <svg
@@ -580,10 +600,10 @@ export default function Home() {
                           : ""
                       }`}
                     >
-                      <CardContent className="p-2 sm:p-3 text-center">
+                      <CardContent className="p-1.5 min-[400px]:p-2 min-[500px]:p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <div
-                            className={`text-xl sm:text-2xl font-bold ${
+                            className={`text-lg min-[400px]:text-xl min-[500px]:text-2xl font-bold ${
                               overallQuality.suspicious > 0
                                 ? "text-danger"
                                 : "text-safe"
@@ -625,10 +645,10 @@ export default function Home() {
                           : ""
                       }`}
                     >
-                      <CardContent className="p-2 sm:p-3 text-center">
+                      <CardContent className="p-1.5 min-[400px]:p-2 min-[500px]:p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <div
-                            className={`text-xl sm:text-2xl font-bold ${
+                            className={`text-lg min-[400px]:text-xl min-[500px]:text-2xl font-bold ${
                               overallQuality.missing > 0
                                 ? "text-warning"
                                 : "text-safe"
@@ -664,9 +684,9 @@ export default function Home() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Card className="cursor-help">
-                      <CardContent className="p-2 sm:p-3 text-center">
+                      <CardContent className="p-1.5 min-[400px]:p-2 min-[500px]:p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <div className="text-xl sm:text-2xl font-bold text-primary">
+                          <div className="text-lg min-[400px]:text-xl min-[500px]:text-2xl font-bold text-primary">
                             {fingerprint ? countProperties(fingerprint) : 0}
                           </div>
                           <svg
@@ -697,9 +717,9 @@ export default function Home() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Card className="cursor-help">
-                      <CardContent className="p-2 sm:p-3 text-center">
+                      <CardContent className="p-1.5 min-[400px]:p-2 min-[500px]:p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <div className="text-xl sm:text-2xl font-bold text-primary">
+                          <div className="text-lg min-[400px]:text-xl min-[500px]:text-2xl font-bold text-primary">
                             {fingerprint ? calculateEntropy(fingerprint) : 0}
                           </div>
                           <svg
@@ -730,9 +750,9 @@ export default function Home() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Card className="cursor-help">
-                      <CardContent className="p-2 sm:p-3 text-center">
+                      <CardContent className="p-1.5 min-[400px]:p-2 min-[500px]:p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <div className="text-xl sm:text-2xl font-bold text-primary">
+                          <div className="text-lg min-[400px]:text-xl min-[500px]:text-2xl font-bold text-primary">
                             {fingerprint
                               ? calculateUniqueness(fingerprint)
                               : "0%"}
@@ -1257,11 +1277,49 @@ export default function Home() {
                   Fingerprint Detector
                 </span>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-center sm:text-left">
-                <p>교육 및 연구 목적으로 제작</p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <div className="flex items-center justify-center gap-3">
+                  <a
+                    href="mailto:admin@colio.net"
+                    className="flex items-center gap-1.5 hover:text-primary transition-colors"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span className="hidden min-[400px]:inline">
+                      admin@colio.net
+                    </span>
+                  </a>
+                  <a
+                    href="https://github.com/JJ-IM/fingerprint-detector"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 hover:text-primary transition-colors"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                    </svg>
+                    <span className="hidden min-[400px]:inline">GitHub</span>
+                  </a>
+                </div>
+                <div className="hidden sm:block w-px h-4 bg-border"></div>
                 <div className="flex items-center justify-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-safe animate-pulse"></div>
-                  <span className="text-safe">클라이언트 사이드 분석</span>
+                  <span className="text-safe">클라이언트 사이드</span>
                 </div>
               </div>
             </div>

@@ -12,6 +12,7 @@
  */
 
 import { IPBasicInfo, IPSecurityInfo, calculateRiskLevel } from "./ip-types";
+import { debugLog } from "./debug-logger";
 
 // ========================================
 // ip-api.com API 응답 타입
@@ -78,7 +79,7 @@ export class IpApiAnalyzer {
   async analyze(ip: string): Promise<IpApiAnalysisResult> {
     try {
       const url = `${this.baseUrl}/${ip}?fields=${this.fields}`;
-      console.log(`[ip-api.com] Analyzing: ${ip}`);
+      debugLog("ip-api.com", `Analyzing: ${ip}`);
 
       const response = await fetch(url, {
         method: "GET",

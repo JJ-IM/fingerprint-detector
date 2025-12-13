@@ -13,6 +13,7 @@
 
 import { ProxyCheckAnalyzer } from "./ip-analyzer";
 import { IpApiAnalyzer, IpApiAnalysisResult } from "./ip-api-analyzer";
+import { debugLog } from "./debug-logger";
 import {
   IPBasicInfo,
   IPSecurityInfo,
@@ -89,7 +90,7 @@ export class MultiSourceIPAnalyzer {
    */
   async analyze(ip: string): Promise<MultiSourceIPResult> {
     const startTime = Date.now();
-    console.log(`[MultiSource] Starting parallel analysis for: ${ip}`);
+    debugLog("MultiSource", `Starting parallel analysis for: ${ip}`);
 
     // 병렬 호출 (하나가 실패해도 다른 것은 계속) + 타임아웃 적용
     const [proxyCheckResult, ipApiResult] = await Promise.allSettled([
@@ -111,11 +112,13 @@ export class MultiSourceIPAnalyzer {
       proxyCheckResult.status === "fulfilled" ? proxyCheckResult.value : null;
     const ipApi = ipApiResult.status === "fulfilled" ? ipApiResult.value : null;
 
-    console.log(
-      `[MultiSource] ProxyCheck: ${proxyCheck?.result?.success ? "✓" : "✗"}`
+    debugLog(
+      "MultiSource",
+      `ProxyCheck: ${proxyCheck?.result?.success ? "✓" : "✗"}`
     );
-    console.log(
-      `[MultiSource] ip-api.com: ${ipApi?.result?.success ? "✓" : "✗"}`
+    debugLog(
+      "MultiSource",
+      `ip-api.com: ${ipApi?.result?.success ? "✓" : "✗"}`
     );
 
     // 둘 다 실패한 경우
@@ -195,11 +198,11 @@ export class MultiSourceIPAnalyzer {
     try {
       const result = await fn();
       const time = Date.now() - start;
-      console.log(`[MultiSource] ${name} completed in ${time}ms`);
+      debugLog("MultiSource", `${name} completed in ${time}ms`);
       return { result, time };
     } catch (error) {
       const time = Date.now() - start;
-      console.error(`[MultiSource] ${name} failed after ${time}ms:`, error);
+      debugLog("MultiSource", `${name} failed after ${time}ms: ${error}`);
       throw error;
     }
   }
