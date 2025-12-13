@@ -17,13 +17,12 @@ function isCurlRequest(request: NextRequest): boolean {
   return false;
 }
 
-// IP 주소 형식 검증
+// IP 주소 형식 검증 (느슨하게 - API에서 상세 검증)
 function isValidIP(ip: string): boolean {
-  // IPv4 패턴
+  // IPv4 패턴 (숫자.숫자.숫자.숫자 형태면 일단 통과 - API에서 상세 검증)
   const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/;
   if (ipv4Pattern.test(ip)) {
-    const parts = ip.split(".").map(Number);
-    return parts.every((part) => part >= 0 && part <= 255);
+    return true;
   }
 
   // IPv6 간단 검증
