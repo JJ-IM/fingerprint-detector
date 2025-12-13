@@ -28,59 +28,122 @@ interface ReservedRange {
 
 const RESERVED_RANGES: ReservedRange[] = [
   // 특수 목적
-  { cidr: "0.0.0.0/8", name: "Current Network", description: "현재 네트워크 (소스 전용)" },
-  { cidr: "255.255.255.255/32", name: "Broadcast", description: "브로드캐스트 주소" },
-  
+  {
+    cidr: "0.0.0.0/8",
+    name: "Current Network",
+    description: "현재 네트워크 (소스 전용)",
+  },
+  {
+    cidr: "255.255.255.255/32",
+    name: "Broadcast",
+    description: "브로드캐스트 주소",
+  },
+
   // 루프백
-  { cidr: "127.0.0.0/8", name: "Loopback", description: "루프백 주소 (localhost)" },
-  
+  {
+    cidr: "127.0.0.0/8",
+    name: "Loopback",
+    description: "루프백 주소 (localhost)",
+  },
+
   // 사설망 (RFC 1918)
-  { cidr: "10.0.0.0/8", name: "Private (Class A)", description: "사설망 주소 (RFC 1918)" },
-  { cidr: "172.16.0.0/12", name: "Private (Class B)", description: "사설망 주소 (RFC 1918)" },
-  { cidr: "192.168.0.0/16", name: "Private (Class C)", description: "사설망 주소 (RFC 1918)" },
-  
+  {
+    cidr: "10.0.0.0/8",
+    name: "Private (Class A)",
+    description: "사설망 주소 (RFC 1918)",
+  },
+  {
+    cidr: "172.16.0.0/12",
+    name: "Private (Class B)",
+    description: "사설망 주소 (RFC 1918)",
+  },
+  {
+    cidr: "192.168.0.0/16",
+    name: "Private (Class C)",
+    description: "사설망 주소 (RFC 1918)",
+  },
+
   // 링크 로컬
-  { cidr: "169.254.0.0/16", name: "Link-Local", description: "링크 로컬 주소 (APIPA)" },
-  
+  {
+    cidr: "169.254.0.0/16",
+    name: "Link-Local",
+    description: "링크 로컬 주소 (APIPA)",
+  },
+
   // CGNAT (RFC 6598)
-  { cidr: "100.64.0.0/10", name: "CGNAT", description: "통신사 내부 NAT 주소 (RFC 6598)" },
-  
+  {
+    cidr: "100.64.0.0/10",
+    name: "CGNAT",
+    description: "통신사 내부 NAT 주소 (RFC 6598)",
+  },
+
   // 문서/테스트용 (RFC 5737)
-  { cidr: "192.0.2.0/24", name: "TEST-NET-1", description: "문서 및 예제용 (RFC 5737)" },
-  { cidr: "198.51.100.0/24", name: "TEST-NET-2", description: "문서 및 예제용 (RFC 5737)" },
-  { cidr: "203.0.113.0/24", name: "TEST-NET-3", description: "문서 및 예제용 (RFC 5737)" },
-  
+  {
+    cidr: "192.0.2.0/24",
+    name: "TEST-NET-1",
+    description: "문서 및 예제용 (RFC 5737)",
+  },
+  {
+    cidr: "198.51.100.0/24",
+    name: "TEST-NET-2",
+    description: "문서 및 예제용 (RFC 5737)",
+  },
+  {
+    cidr: "203.0.113.0/24",
+    name: "TEST-NET-3",
+    description: "문서 및 예제용 (RFC 5737)",
+  },
+
   // IETF 프로토콜
-  { cidr: "192.0.0.0/24", name: "IETF Protocol", description: "IETF 프로토콜 할당" },
-  
+  {
+    cidr: "192.0.0.0/24",
+    name: "IETF Protocol",
+    description: "IETF 프로토콜 할당",
+  },
+
   // 벤치마크 (RFC 2544)
-  { cidr: "198.18.0.0/15", name: "Benchmark", description: "네트워크 벤치마크 테스트용 (RFC 2544)" },
-  
+  {
+    cidr: "198.18.0.0/15",
+    name: "Benchmark",
+    description: "네트워크 벤치마크 테스트용 (RFC 2544)",
+  },
+
   // 멀티캐스트 (RFC 5771)
   { cidr: "224.0.0.0/4", name: "Multicast", description: "멀티캐스트 주소" },
-  
+
   // 예약됨 (미래 사용)
-  { cidr: "240.0.0.0/4", name: "Reserved", description: "미래 사용을 위해 예약됨" },
+  {
+    cidr: "240.0.0.0/4",
+    name: "Reserved",
+    description: "미래 사용을 위해 예약됨",
+  },
 ];
 
 // IP 형식 및 예약 범위 검증
-function validateIP(ip: string): { valid: boolean; error?: string; hint?: string; rangeInfo?: ReservedRange } {
+function validateIP(ip: string): {
+  valid: boolean;
+  error?: string;
+  hint?: string;
+  rangeInfo?: ReservedRange;
+} {
   // IPv4 패턴
   const ipv4Pattern = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
   const match = ip.match(ipv4Pattern);
-  
+
   if (match) {
     const parts = [match[1], match[2], match[3], match[4]].map(Number);
     const invalidParts = parts.filter((part) => part > 255);
-    
+
     if (invalidParts.length > 0) {
       return {
         valid: false,
         error: "잘못된 IP 형식입니다",
-        hint: `각 옥텟은 0-255 범위여야 합니다 (${invalidParts.join(", ")}은 범위 초과)`,
+        hint: `각 옥텟은 0-255 범위여야 합니다 (${invalidParts.join(
+          ", "
+        )}은 범위 초과)`,
       };
     }
-    
+
     // 예약된 IP 범위 체크
     for (const range of RESERVED_RANGES) {
       if (isInCIDR(ip, range.cidr)) {
@@ -92,7 +155,7 @@ function validateIP(ip: string): { valid: boolean; error?: string; hint?: string
         };
       }
     }
-    
+
     return { valid: true };
   }
 
@@ -106,7 +169,7 @@ function validateIP(ip: string): { valid: boolean; error?: string; hint?: string
         hint: "IPv6 루프백 주소",
       };
     }
-    
+
     // IPv6 링크 로컬 (fe80::/10)
     if (ip.toLowerCase().startsWith("fe80:")) {
       return {
@@ -115,7 +178,7 @@ function validateIP(ip: string): { valid: boolean; error?: string; hint?: string
         hint: "IPv6 링크 로컬 주소",
       };
     }
-    
+
     // 기본적인 IPv6 패턴 체크
     const ipv6Pattern = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
     if (ipv6Pattern.test(ip) || ip.startsWith("::ffff:")) {
