@@ -25,16 +25,28 @@
 
 ### 🖥️ 브라우저 핑거프린트
 
-| 기능             | 설명                         |
-| ---------------- | ---------------------------- |
-| Canvas/WebGL     | 그래픽 렌더링 기반 고유 식별 |
-| Audio 핑거프린트 | 오디오 처리 특성 분석        |
-| 하드웨어 정보    | CPU 코어, 메모리, GPU 정보   |
-| 화면 정보        | 해상도, 색상 깊이, 픽셀 비율 |
-| 폰트 감지        | 설치된 시스템 폰트 탐지      |
-| 권한 상태        | 카메라, 마이크, 위치 등      |
-| 위변조 탐지      | 브라우저 스푸핑/조작 감지    |
-| SHA-256 해시     | 전체 핑거프린트의 고유 해시  |
+| 기능             | 설명                                       |
+| ---------------- | ------------------------------------------ |
+| Canvas 핑거프린트 | 3종 테스트 이미지로 렌더링 차이 분석       |
+| WebGL 핑거프린트  | GPU 정보 및 그래픽 렌더링 특성 추출        |
+| Audio 핑거프린트 | 오디오 처리 특성 분석                      |
+| 하드웨어 정보    | CPU 코어, 메모리, GPU, 터치스크린 정보     |
+| 화면 정보        | 해상도, 색상 깊이, 픽셀 비율(HiDPI)        |
+| 폰트 감지        | 설치된 시스템 폰트 탐지                    |
+| 권한 상태        | 카메라, 마이크, 위치 등                    |
+| 위변조 탐지      | CreepJS 스타일 브라우저 스푸핑/조작 감지   |
+| 추적 가능성 점수 | 실제 통계 기반 고유성 및 엔트로피 계산     |
+| SHA-256 해시     | 전체 핑거프린트의 고유 해시                |
+
+#### Canvas 테스트 이미지
+
+3종류의 Canvas 테스트로 브라우저별 렌더링 차이를 분석합니다:
+
+| 테스트 | 이름 | 분석 대상 |
+|--------|------|-----------|
+| 1 | 텍스트 & 도형 | 폰트 렌더링, 안티앨리어싱, 베지어 곡선 |
+| 2 | 이모지 & 유니코드 | 이모지 렌더링, 다국어 폰트 지원 |
+| 3 | 그라데이션 & 투명도 | 색상 블렌딩, 알파 채널 처리 |
 
 ### 🌐 IP 분석 (Multi-Source)
 
@@ -53,11 +65,24 @@
 - 🌐 ISP/ASN 네트워크 정보
 - ⚠️ 종합 위험도 점수 (0-100)
 
+**예약된 IP 검증:**
+
+CLI에서 사설 IP, 루프백, CGNAT, 멀티캐스트 등 RFC 예약 IP 조회 시 적절한 오류 메시지 반환
+
 ### 🗺️ 지도 시각화
 
 - Leaflet + OpenStreetMap 기반
 - IP 위치 마커 표시
 - 반응형 디자인 지원
+
+### 📊 브라우저 요약 카드
+
+각 항목에 마우스를 올리면 상세 설명 툴팁 표시:
+
+- 브라우저, 운영체제, 해상도
+- 언어, 시간대, CPU, 메모리
+- GPU, 화면 비율(HiDPI)
+- 터치 지원, WebGL, Canvas 해시
 
 ---
 
@@ -191,10 +216,10 @@ src/
 │   └── ui/                       # shadcn/ui
 │
 ├── lib/
-│   ├── fingerprint.ts            # 핑거프린트 수집
+│   ├── fingerprint.ts            # 핑거프린트 수집 (Canvas 3종 테스트)
 │   ├── fingerprint-enhanced.ts   # 확장 핑거프린트
-│   ├── fingerprint-score-engine.ts # 점수 계산
-│   ├── lie-detector.ts           # 위변조 탐지
+│   ├── fingerprint-score-engine.ts # 점수 계산 (통계 기반 고유성)
+│   ├── lie-detector.ts           # 위변조 탐지 (CreepJS 스타일)
 │   ├── ip-analyzer.ts            # ProxyCheck.io
 │   ├── ip-api-analyzer.ts        # ip-api.com
 │   ├── multi-source-analyzer.ts  # 통합 분석기
@@ -295,15 +320,40 @@ logs/
 
 ## 🛠️ 기술 스택
 
-| 분류            | 기술                               |
-| --------------- | ---------------------------------- |
-| **Framework**   | Next.js 16 (App Router, Turbopack) |
-| **Language**    | TypeScript 5                       |
-| **Styling**     | Tailwind CSS 4                     |
-| **UI**          | shadcn/ui, Radix UI                |
-| **Map**         | Leaflet, OpenStreetMap             |
-| **IP Analysis** | ProxyCheck.io, ip-api.com          |
-| **Fingerprint** | FingerprintJS                      |
+| 분류            | 기술                                |
+| --------------- | ----------------------------------- |
+| **Framework**   | Next.js 16.0.10 (App Router, Turbopack) |
+| **Language**    | TypeScript 5                        |
+| **Styling**     | Tailwind CSS 4                      |
+| **UI**          | shadcn/ui, Radix UI                 |
+| **Map**         | Leaflet, OpenStreetMap              |
+| **IP Analysis** | ProxyCheck.io, ip-api.com           |
+| **Fingerprint** | FingerprintJS + Custom Lie Detector |
+
+---
+
+## 🔬 핑거프린트 분석 상세
+
+### 추적 가능성 점수 계산
+
+실제 통계 데이터 기반으로 각 속성의 고유성을 계산합니다:
+
+| 속성 | 통계 기반 고유성 계산 |
+|------|----------------------|
+| 화면 해상도 | 1920x1080(23%), 1366x768(15%) 등 점유율 반영 |
+| CPU 코어 | 8코어(30%), 4코어(25%) 등 분포 반영 |
+| 메모리 | 8GB(35%), 16GB(25%) 등 분포 반영 |
+| Canvas/WebGL | 해시값 기반 거의 고유 (92-99%) |
+| User-Agent | 브라우저/OS 조합별 점유율 반영 |
+
+### 위변조 탐지 (Lie Detector)
+
+CreepJS 스타일의 브라우저 조작 탐지:
+
+- **Prototype 검사**: Navigator, Screen, Canvas 등의 getter 변조 감지
+- **타이밍 분석**: performance.now() 정밀도 변조 감지
+- **일관성 검사**: UA와 플랫폼, 화면 크기 등 불일치 탐지
+- **개인정보 도구**: Brave, Firefox Resist Fingerprinting 등 감지
 
 ---
 

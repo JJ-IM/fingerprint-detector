@@ -295,54 +295,135 @@ export class FingerprintCollector {
   }
 
   private async collectCanvas(): Promise<Record<string, unknown>> {
-    const canvas = document.createElement("canvas");
-    canvas.width = 280;
-    canvas.height = 60;
-    const ctx = canvas.getContext("2d");
+    const images: { name: string; description: string; image: string; hash: string }[] = [];
 
-    if (!ctx) {
+    // === 테스트 1: 텍스트 & 도형 (기본 핑거프린트) ===
+    const canvas1 = document.createElement("canvas");
+    canvas1.width = 280;
+    canvas1.height = 60;
+    const ctx1 = canvas1.getContext("2d");
+
+    if (!ctx1) {
       return { supported: false };
     }
 
-    // Draw various elements for fingerprinting
-    ctx.fillStyle = "#f60";
-    ctx.fillRect(10, 10, 100, 40);
+    ctx1.fillStyle = "#f60";
+    ctx1.fillRect(10, 10, 100, 40);
 
-    ctx.fillStyle = "#069";
-    ctx.font = "14px Arial";
-    ctx.fillText("Browser Fingerprint!", 2, 20);
+    ctx1.fillStyle = "#069";
+    ctx1.font = "14px Arial";
+    ctx1.fillText("Browser Fingerprint!", 2, 20);
 
-    ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
-    ctx.fillText("Canvas Test 🎨", 4, 40);
+    ctx1.fillStyle = "rgba(102, 204, 0, 0.7)";
+    ctx1.fillText("Canvas Test 🎨", 4, 40);
 
-    ctx.strokeStyle = "#0a4";
-    ctx.beginPath();
-    ctx.arc(50, 30, 15, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx1.strokeStyle = "#0a4";
+    ctx1.beginPath();
+    ctx1.arc(50, 30, 15, 0, Math.PI * 2);
+    ctx1.stroke();
 
-    ctx.beginPath();
-    ctx.moveTo(120, 10);
-    ctx.bezierCurveTo(150, 10, 150, 50, 180, 50);
-    ctx.stroke();
+    ctx1.beginPath();
+    ctx1.moveTo(120, 10);
+    ctx1.bezierCurveTo(150, 10, 150, 50, 180, 50);
+    ctx1.stroke();
 
-    // Gradient
-    const gradient = ctx.createLinearGradient(200, 0, 280, 0);
-    gradient.addColorStop(0, "red");
-    gradient.addColorStop(0.5, "green");
-    gradient.addColorStop(1, "blue");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(200, 10, 80, 40);
+    const gradient1 = ctx1.createLinearGradient(200, 0, 280, 0);
+    gradient1.addColorStop(0, "red");
+    gradient1.addColorStop(0.5, "green");
+    gradient1.addColorStop(1, "blue");
+    ctx1.fillStyle = gradient1;
+    ctx1.fillRect(200, 10, 80, 40);
 
-    const dataURL = canvas.toDataURL();
-    const hash = await this.hashString(dataURL);
+    const dataURL1 = canvas1.toDataURL();
+    const hash1 = await this.hashString(dataURL1);
+    images.push({
+      name: "텍스트 & 도형",
+      description: "폰트 렌더링, 안티앨리어싱, 베지어 곡선 테스트",
+      image: dataURL1,
+      hash: hash1,
+    });
+
+    // === 테스트 2: 이모지 & 유니코드 ===
+    const canvas2 = document.createElement("canvas");
+    canvas2.width = 280;
+    canvas2.height = 60;
+    const ctx2 = canvas2.getContext("2d");
+
+    if (ctx2) {
+      ctx2.fillStyle = "#1a1a2e";
+      ctx2.fillRect(0, 0, 280, 60);
+
+      ctx2.font = "24px Arial";
+      ctx2.fillText("🔒🌍🎮💻🔥", 10, 35);
+
+      ctx2.font = "12px serif";
+      ctx2.fillStyle = "#fff";
+      ctx2.fillText("한글 日本語 العربية", 150, 25);
+      ctx2.fillText("Ćçñ αβγ ∑∏∫", 150, 45);
+
+      const dataURL2 = canvas2.toDataURL();
+      const hash2 = await this.hashString(dataURL2);
+      images.push({
+        name: "이모지 & 유니코드",
+        description: "이모지 렌더링, 다국어 폰트 지원 테스트",
+        image: dataURL2,
+        hash: hash2,
+      });
+    }
+
+    // === 테스트 3: 그라데이션 & 투명도 ===
+    const canvas3 = document.createElement("canvas");
+    canvas3.width = 280;
+    canvas3.height = 60;
+    const ctx3 = canvas3.getContext("2d");
+
+    if (ctx3) {
+      // 방사형 그라데이션
+      const radialGrad = ctx3.createRadialGradient(70, 30, 5, 70, 30, 40);
+      radialGrad.addColorStop(0, "rgba(255, 0, 0, 1)");
+      radialGrad.addColorStop(0.5, "rgba(0, 255, 0, 0.7)");
+      radialGrad.addColorStop(1, "rgba(0, 0, 255, 0.3)");
+      ctx3.fillStyle = radialGrad;
+      ctx3.fillRect(20, 5, 100, 50);
+
+      // 선형 그라데이션 + 투명도
+      const linearGrad = ctx3.createLinearGradient(140, 0, 260, 60);
+      linearGrad.addColorStop(0, "rgba(255, 255, 0, 0.8)");
+      linearGrad.addColorStop(0.5, "rgba(255, 0, 255, 0.5)");
+      linearGrad.addColorStop(1, "rgba(0, 255, 255, 0.2)");
+      ctx3.fillStyle = linearGrad;
+      ctx3.fillRect(140, 5, 120, 50);
+
+      // 투명도 겹침 테스트
+      ctx3.globalAlpha = 0.5;
+      ctx3.fillStyle = "#ff0000";
+      ctx3.beginPath();
+      ctx3.arc(200, 30, 20, 0, Math.PI * 2);
+      ctx3.fill();
+      ctx3.globalAlpha = 1.0;
+
+      const dataURL3 = canvas3.toDataURL();
+      const hash3 = await this.hashString(dataURL3);
+      images.push({
+        name: "그라데이션 & 투명도",
+        description: "색상 블렌딩, 알파 채널 처리 테스트",
+        image: dataURL3,
+        hash: hash3,
+      });
+    }
+
+    // 통합 해시 생성
+    const combinedHash = await this.hashString(images.map(i => i.hash).join(""));
 
     return {
       supported: true,
-      hash: hash,
-      image: dataURL, // Canvas 핑거프린트에 사용된 이미지
-      dataURLLength: dataURL.length,
-      width: canvas.width,
-      height: canvas.height,
+      hash: combinedHash,
+      images: images,
+      image: images[0]?.image, // 기존 호환성 유지
+      dataURLLength: dataURL1.length,
+      width: canvas1.width,
+      height: canvas1.height,
+      testCount: images.length,
     };
   }
 
